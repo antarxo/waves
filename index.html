@@ -96,7 +96,7 @@
     </div>
 
     <script>
-      let handLeft, handRight; // Μεταβλητές για τις εικόνες χεριών
+      let handLeft, handRight;
 
       function preload() {
         handLeft = loadImage('handleft.png');
@@ -189,6 +189,12 @@
       const greenBaseY = 200;
 
       function setup() {
+        // Έλεγχος ύπαρξης container πριν δημιουργία canvas
+        if (!document.getElementById('canvas-container')) {
+          console.error('Canvas container not found!');
+          return;
+        }
+        
         const canvas = createCanvas(800, 400);
         canvas.parent('canvas-container');
         noStroke();
@@ -201,9 +207,20 @@
         blueWave.updateHandPosition();
         redWave.updateHandPosition();
 
+        // Δημιουργία sliders με έλεγχο ύπαρξης parent
+        const createSliderSafe = (parentId, ...args) => {
+          const parent = document.getElementById(parentId);
+          if (!parent) {
+            console.error(`Parent ${parentId} not found!`);
+            return null;
+          }
+          const slider = createSlider(...args);
+          slider.parent(parent);
+          return slider;
+        };
+
         // Κοινός slider ταχύτητας
-        const speedSlider = createSlider(0, 500, 100);
-        speedSlider.parent('speed-slider');
+        const speedSlider = createSliderSafe(0, 500, 100, 'speed-slider');
         speedSlider.input(() => {
           speed = speedSlider.value();
           select('#speed-value').html(speed);
@@ -212,12 +229,12 @@
         });
 
         // Sliders για μπλε
-        createSliderWithUpdates(0, 100, 20, 1, 'amplitude-slider-blue', 'amplitude-value-blue', v => blueWave.amplitude = v);
-        createSliderWithUpdates(0.1, 5, 1, 0.1, 'frequency-slider-blue', 'frequency-value-blue', v => blueWave.frequency = v);
+        createSliderSafe(0, 100, 20, 1, 'amplitude-slider-blue');
+        createSliderSafe(0.1, 5, 1, 0.1, 'frequency-slider-blue');
 
         // Sliders για κόκκινο
-        createSliderWithUpdates(0, 100, 20, 1, 'amplitude-slider-red', 'amplitude-value-red', v => redWave.amplitude = v);
-        createSliderWithUpdates(0.1, 5, 1, 0.1, 'frequency-slider-red', 'frequency-value-red', v => redWave.frequency = v);
+        createSliderSafe(0, 100, 20, 1, 'amplitude-slider-red');
+        createSliderSafe(0.1, 5, 1, 0.1, 'frequency-slider-red');
 
         // Κουμπιά ελέγχου
         select('#playBtn').mousePressed(() => {
@@ -239,20 +256,6 @@
         select('#green-visibility').changed(() => {
           greenVisible = select('#green-visibility').value() === 'visible';
         });
-      }
-
-      function createSliderWithUpdates(min, max, value, step, parentId, valueId, updateCallback) {
-        if(document.getElementById(parentId)) {
-          const slider = createSlider(min, max, value, step);
-          slider.parent(parentId);
-          slider.input(() => {
-            const val = step >= 1 ? slider.value() : slider.value().toFixed(1);
-            select('#'+valueId).html(val);
-            updateCallback(parseFloat(val));
-            blueWave.updateStartTimes(speed);
-            redWave.updateStartTimes(speed);
-          });
-        }
       }
 
       function draw() {
