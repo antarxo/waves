@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <style>
+      /* Διορθωμένο CSS για σωστή εμφάνιση canvas */
+      #canvas-container {
+        margin: 20px 0;
+        border: 2px solid #ddd;
+      }
+      /* Υπόλοιπο CSS παραμένει ίδιο */
+    </style>
+  </head>
+  <body>
+    <!-- HTML παραμένει ίδιο -->
+
+    <script>
+      class WaveSystem {
+        constructor(color, yPosition, waveKey) {
+          // Διορθωμένη αρχικοποίηση παραμέτρων
+          this.waveKey = waveKey;
+          this.balls = [];
+          this.color = color;
+          this.yPosition = yPosition;
+          this.amplitude = 20;
+          this.frequency = 1;
+          this.direction = 'left';
+          
+          // Διορθωμένη σύνδεση με slider επιλογέα
+          this.select = select(`[data-wave="${this.waveKey}"]`);
+          this.select.changed(() => this.updateDirection());
+        }
+
+        updateDirection() {
+          this.direction = this.select.value();
+          this.updateStartTimes(speed);
+        }
+
+        // Υπόλοιπη κλάση παραμένει ίδια
+      }
+
+      // Διορθωμένη δημιουργία sliders
+      function createSliderWithUpdates(min, max, value, step, parentId, valueId, updateCallback) {
+        const slider = createSlider(min, max, value, step); // Προσθήκη step
+        slider.parent(parentId);
+        slider.input(() => {
+          const val = step >= 1 ? slider.value() : slider.value().toFixed(1);
+          select('#'+valueId).html(val);
+          updateCallback(parseFloat(val));
+          blueWave.updateStartTimes(speed);
+          redWave.updateStartTimes(speed);
+        });
+        return slider;
+      }
+
+      function setup() {
+        // Διορθωμένη κλήση με προσθήκη step
+        createSliderWithUpdates(0, 100, 20, 1, 'amplitude-slider-blue', 'amplitude-value-blue', v => blueWave.amplitude = v);
+        createSliderWithUpdates(0.1, 5, 1, 0.1, 'frequency-slider-blue', 'frequency-value-blue', v => blueWave.frequency = v);
+        createSliderWithUpdates(0, 100, 20, 1, 'amplitude-slider-red', 'amplitude-value-red', v => redWave.amplitude = v);
+        createSliderWithUpdates(0.1, 5, 1, 0.1, 'frequency-slider-red', 'frequency-value-red', v => redWave.frequency = v);
+
+        // Υπόλοιπο setup παραμένει ίδιο
+      }
+
+      // Υπόλοιπος κώδικας παραμένει ίδιος
+    </script>
+  </body>
+</html>
