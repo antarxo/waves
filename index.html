@@ -198,6 +198,55 @@
         this.selectDirection.changed(() => this.updateDirection());
         this.selectPhase.changed(() => this.phase = parseInt(this.selectPhase.value()));
       }
+      
+      // Ενημέρωση θέσεων χωρίς σχεδιασμό
+      updatePositions(simTime, speed) {
+        // Ενημέρωση θέσης "χεριού"
+        if(select('#wave-type-select').value() === 'transverse'){
+          if(this.hand.firstBall) this.hand.y = this.hand.firstBall.currentY;
+        } else {
+          if(this.hand.firstBall) {
+            const t = simTime - this.hand.firstBall.startTime;
+            const phase = radians(this.phase) + TWO_PI * this.frequency * t;
+            this.hand.x = this.hand.firstBall.x + this.amplitude * sin(phase);
+          }
+        }
+        // Ενημέρωση θέσεων για κάθε ball
+        const waveType = select('#wave-type-select').value();
+        this.balls.forEach(ball => {
+          if(simTime >= ball.startTime) {
+            const t = simTime - ball.startTime;
+            const phase = radians(this.phase) + TWO_PI * this.frequency * t;
+            if(waveType === 'transverse'){
+              ball.currentY = ball.baseY + this.amplitude * sin(phase);
+            } else {
+              ball.currentX = ball.x + this.amplitude * sin(phase);
+            }
+          } else {
+            if(waveType === 'transverse'){
+              ball.currentY = ball.baseY;
+            } else {
+              ball.currentX = ball.x;
+            }
+          }
+        });
+      }
+      
+      // Σχεδιασμός του κύματος βάσει των ενημερωμένων θέσεων
+      drawWave() {
+        const waveType = select('#wave-type-select').value();
+        fill(this.color);
+        if(waveType === 'transverse'){
+          this.balls.forEach(ball => {
+            ellipse(ball.x, ball.currentY, this.ballSize, this.ballSize);
+          });
+        } else {
+          rectMode(CENTER);
+          this.balls.forEach(ball => {
+            rect(ball.currentX, ball.baseY, 2, 60);
+          });
+        }
+      }
 
       updateHandPosition() {
         this.hand.img = this.direction === 'left' ? handLeft : handRight;
@@ -220,8 +269,7 @@
             x: x,
             baseY: this.baseY,
             startTime: Infinity,
-            currentY: this.baseY // για "Εγκάρσιο"
-            // Για τις "Διάμηκες" θα υπολογίσουμε την μετατόπιση στο x (ball.currentX)
+            currentY: this.baseY
           });
         }
         this.updateFirstBall();
@@ -240,49 +288,6 @@
           ball.startTime = speed > 0 ? distance / speed : Infinity;
         });
       }
-
-      draw(simTime, speed) {
-        fill(this.color);
-        const waveType = select('#wave-type-select').value();
-        
-        // Ενημέρωση θέσης του "χεριού" ανάλογα με τον τύπο κύματος
-        if(waveType === 'transverse'){
-          if(this.hand.firstBall) this.hand.y = this.hand.firstBall.currentY;
-        } else if(waveType === 'διάμηκες'){
-          if(this.hand.firstBall) {
-            const t = simTime - this.hand.firstBall.startTime;
-            const phase = radians(this.phase) + TWO_PI * this.frequency * t;
-            this.hand.x = this.hand.firstBall.x + this.amplitude * sin(phase);
-          }
-        }
-
-        this.balls.forEach(ball => {
-          if(simTime >= ball.startTime) {
-            const t = simTime - ball.startTime;
-            const phase = radians(this.phase) + TWO_PI * this.frequency * t;
-            if(waveType === 'transverse'){
-              ball.currentY = ball.baseY + this.amplitude * sin(phase);
-            } else if(waveType === 'διάμηκες'){
-              ball.currentX = ball.x + this.amplitude * sin(phase);
-            }
-          } else {
-            if(waveType === 'transverse'){
-              ball.currentY = ball.baseY;
-            } else {
-              ball.currentX = ball.x;
-            }
-          }
-          
-          // Σχεδίαση κύματος:
-          if(waveType === 'transverse'){
-            // Ελλείψεις με το αρχικό χρώμα
-            ellipse(ball.x, ball.currentY, this.ballSize, this.ballSize);
-          } else if(waveType === 'διάμηκες'){
-            rectMode(CENTER);
-            rect(ball.currentX, ball.baseY, 2, 60);
-          }
-        });
-      }
     }
 
     let blueWave, redWave;
@@ -290,7 +295,6 @@
     let simTime = 0;
     let lastUpdate = 0;
     let speed = 100;
-    // greenBaseY χρησιμεύει ως γραμμή αναφοράς για την υπέρθεση
     const greenBaseY = 200;
     let greenVisible = true;
 
@@ -362,7 +366,7 @@
       background(245);
       stroke(200);
       drawingContext.setLineDash([5, 5]);
-      // Γραμμές αναφοράς (η "ευθεία διάδοσης")
+      // Γραμμές αναφοράς
       line(50, blueWave.baseY, width - 50, blueWave.baseY);
       line(50, redWave.baseY, width - 50, redWave.baseY);
       line(50, greenBaseY, width - 50, greenBaseY);
@@ -374,20 +378,27 @@
         lastUpdate = now;
       }
 
+      // Ενημέρωση θέσεων και των δύο κυμάτων (ακόμα κι αν δεν είναι ορατά)
+      blueWave.updatePositions(simTime, speed);
+      redWave.updatePositions(simTime, speed);
+
       // Έλεγχος ορατότητας για κάθε κύμα
       const blueWaveVisible = document.getElementById("blue-visible").checked;
       const redWaveVisible = document.getElementById("red-visible").checked;
       const waveType = select('#wave-type-select').value;
 
-      if(blueWaveVisible) blueWave.draw(simTime, speed);
-      if(redWaveVisible) redWave.draw(simTime, speed);
+      if(blueWaveVisible) {
+        blueWave.drawWave();
+      }
+      if(redWaveVisible) {
+        redWave.drawWave();
+      }
 
       // Υπέρθεση (overlay) – πάντα πράσινη
       if(greenVisible) {
         noStroke();
         fill(0, 200, 0);
         if(waveType === 'transverse'){
-          // Υπέρθεση: υπολογισμός μέσης κάθετης μετατόπισης μόνο για ορατά κύματα
           for(let i = 0; i < blueWave.balls.length; i++){
             let dyBlue = blueWaveVisible ? (blueWave.balls[i].currentY - blueWave.balls[i].baseY) : 0;
             let dyRed = redWaveVisible ? (redWave.balls[i].currentY - redWave.balls[i].baseY) : 0;
@@ -399,7 +410,6 @@
             }
           }
         } else if(waveType === 'διάμηκες'){
-          // Υπέρθεση: υπολογισμός μέσης οριζόντιας μετατόπισης μόνο για ορατά κύματα
           rectMode(CENTER);
           for(let i = 0; i < blueWave.balls.length; i++){
             let dxBlue = blueWaveVisible ? (blueWave.balls[i].currentX - blueWave.balls[i].x) : 0;
@@ -414,15 +424,13 @@
         }
       }
 
-      // Σχεδίαση των "χειρών" ώστε να φαίνεται η κίνησή τους
-      if(isPlaying) {
-        if(waveType === 'transverse'){
-          image(blueWave.hand.img, blueWave.hand.x, blueWave.hand.y, 32, 32);
-          image(redWave.hand.img, redWave.hand.x, redWave.hand.y, 32, 32);
-        } else if(waveType === 'διάμηκες'){
-          image(blueWave.hand.img, blueWave.hand.x, blueWave.baseY, 32, 32);
-          image(redWave.hand.img, redWave.hand.x, redWave.baseY, 32, 32);
-        }
+      // Σχεδίαση των "χειρών" (πάντα ορατά)
+      if(waveType === 'transverse'){
+        image(blueWave.hand.img, blueWave.hand.x, blueWave.hand.y, 32, 32);
+        image(redWave.hand.img, redWave.hand.x, redWave.hand.y, 32, 32);
+      } else if(waveType === 'διάμηκες'){
+        image(blueWave.hand.img, blueWave.hand.x, blueWave.baseY, 32, 32);
+        image(redWave.hand.img, redWave.hand.x, redWave.baseY, 32, 32);
       }
     }
   </script>
