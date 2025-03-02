@@ -8,7 +8,6 @@
       margin: 0;
       padding: 0;
     }
-
     body {
       display: flex;
       flex-direction: column;
@@ -16,14 +15,12 @@
       font-family: Arial, sans-serif;
       background: #f8f9fa;
     }
-
     #main-container {
       flex: 1;
       display: flex;
       padding: 10px;
       gap: 15px;
     }
-
     #wave-section {
       flex: 3;
       display: flex;
@@ -33,12 +30,10 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       position: relative;
     }
-
     #canvas-container {
       flex: 1;
       padding: 20px;
     }
-
     #controls-panel {
       width: 280px;
       background: white;
@@ -47,7 +42,6 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       overflow-y: auto;
     }
-
     #global-controls-row {
       display: flex;
       gap: 15px;
@@ -56,32 +50,26 @@
       border-top: 1px solid #eee;
       align-items: center;
     }
-
     .wave-controls {
       margin-bottom: 15px;
       padding-bottom: 15px;
       border-bottom: 1px solid #eee;
     }
-
     h3 {
       margin-bottom: 12px;
       font-size: 1em;
     }
-
     .blue-title { color: #0066cc; }
     .red-title { color: #cc0000; }
-
     .control-group {
       margin-bottom: 12px;
     }
-
     label {
       display: block;
       font-size: 0.85em;
       color: #666;
       margin-bottom: 3px;
     }
-
     select {
       width: 100%;
       padding: 6px;
@@ -89,12 +77,10 @@
       border: 1px solid #ddd;
       border-radius: 3px;
     }
-
     .p5-slider {
       width: 100% !important;
       margin: 8px 0 !important;
     }
-
     button {
       padding: 6px 12px;
       background: #007bff;
@@ -105,24 +91,20 @@
       transition: background 0.3s;
       font-size: 0.85em;
     }
-
     button:hover {
       background: #0056b3;
     }
-
     .compact-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
     }
-
     .speed-control {
       display: flex;
       align-items: center;
       gap: 10px;
       margin-left: auto;
     }
-
     #speed-value {
       font-size: 0.9em;
       color: #666;
@@ -209,6 +191,11 @@
   <div id="global-controls-row">
     <button id="playBtn">▶</button>
     <button id="resetBtn">↻</button>
+    <!-- Επιλογέας οπτικοποίησης κύματος -->
+    <select id="wave-type-select" style="width: 150px;">
+      <option value="transverse">Εγκάρσιο</option>
+      <option value="longitudinal">Διαμήκιο</option>
+    </select>
     <select id="green-visibility" style="width: 100px;">
       <option value="visible">Πράσινο</option>
       <option value="hidden">Κρυφό</option>
@@ -222,25 +209,25 @@
   </div>
 
   <script>
-    // Ο ίδιος JavaScript κώδικας με προηγούμενη απάντηση
-    // (Δεν άλλαξε η λειτουργικότητα, μόνο η θέση των στοιχείων)
+    // Φόρτωση εικόνων για τα "χέρια"
     let handLeft, handRight;
-
     function preload() {
       handLeft = loadImage('handleft.png');
       handRight = loadImage('handright.png');
     }
 
     class WaveSystem {
-      constructor(color, yPosition, waveKey) {
+      constructor(color, baseLine, waveKey) {
         this.waveKey = waveKey;
         this.balls = [];
         this.color = color;
-        this.yPosition = yPosition;
+        // Για εγκάρσιο κύμα, baseLine είναι το y σταθερό, για διαμήκιο είναι το x σταθερό
+        this.baseLine = baseLine;
         this.amplitude = 20;
         this.frequency = 1;
         this.phase = 0;
         this.direction = 'left';
+        // Μέγεθος για απεικόνιση (δείκτης για "μπάλα" – θα χρησιμοποιηθεί ως βάση για το x ή y)
         this.ballSize = 2;
         this.gap = 1;
         
@@ -249,8 +236,9 @@
         
         this.hand = {
           img: handLeft,
-          x: 50,
-          y: yPosition,
+          // Αρχικές θέσεις: για εγκάρσιο το x καθορίζεται, για διαμήκιο το y παραμένει σταθερό
+          x: this.direction === 'left' ? 50 : width - 50,
+          y: this.baseLine,
           firstBall: null
         };
 
@@ -260,26 +248,30 @@
 
       updateHandPosition() {
         this.hand.img = this.direction === 'left' ? handLeft : handRight;
+        // Ανάλογα με τον τύπο κύματος, θέτουμε το σταθερό σημείο εκκίνησης
         this.hand.x = this.direction === 'left' ? 50 : width - 50;
         this.updateFirstBall();
       }
 
       updateFirstBall() {
-        const startPosition = this.direction === 'left' ? 50 : width - 50;
+        const startPos = this.direction === 'left' ? 50 : width - 50;
+        // Εύρεση του πρώτου στοιχείου με βάση τη διαφορά από την αρχική θέση.
         this.hand.firstBall = this.balls.reduce((closest, ball) => {
-          const distance = Math.abs(ball.x - startPosition);
+          const distance = Math.abs(ball.x - startPos);
           return distance < closest.distance ? {ball, distance} : closest;
         }, {ball: null, distance: Infinity}).ball;
       }
 
       initBalls() {
+        // Δημιουργούμε τα σημεία κατά μήκος του x (για εγκάρσιο) ή του y (για διαμήκιο) – εδώ χρησιμοποιούμε το x ως βάση
         const totalSpace = this.ballSize + this.gap;
         for (let x = 50; x < width - 50; x += totalSpace) {
           this.balls.push({ 
             x: x,
-            baseY: this.yPosition,
+            baseY: this.baseLine,
             startTime: Infinity,
-            currentY: this.yPosition 
+            currentY: this.baseLine // για εγκάρσιο κύμα
+            // για διαμήκιο, το ball.x θα χρησιμοποιηθεί ως βάση
           });
         }
         this.updateFirstBall();
@@ -292,26 +284,54 @@
       }
 
       updateStartTimes(speed) {
-        const startPosition = this.direction === 'left' ? 50 : width - 50;
+        const startPos = this.direction === 'left' ? 50 : width - 50;
         this.balls.forEach(ball => {
-          const distance = Math.abs(ball.x - startPosition);
+          const distance = Math.abs(ball.x - startPos);
           ball.startTime = speed > 0 ? distance / speed : Infinity;
         });
       }
 
       draw(simTime, speed) {
         fill(this.color);
-        if(this.hand.firstBall) this.hand.y = this.hand.firstBall.currentY;
+        // Ανάγνωση του τύπου κύματος από τον global επιλογέα
+        const waveType = select('#wave-type-select').value();
+        
+        // Ενημέρωση θέσης του "χεριού" ανάλογα με τον τύπο
+        if(waveType === 'transverse'){
+          if(this.hand.firstBall) this.hand.y = this.hand.firstBall.currentY;
+        } else if(waveType === 'longitudinal'){
+          if(this.hand.firstBall) {
+            const t = simTime - this.hand.firstBall.startTime;
+            const phase = radians(this.phase) + TWO_PI * this.frequency * t;
+            this.hand.x = this.hand.firstBall.x + this.amplitude * sin(phase);
+          }
+        }
 
         this.balls.forEach(ball => {
           if(simTime >= ball.startTime) {
             const t = simTime - ball.startTime;
             const phase = radians(this.phase) + TWO_PI * this.frequency * t;
-            ball.currentY = ball.baseY + this.amplitude * sin(phase);
+            if(waveType === 'transverse'){
+              ball.currentY = ball.baseY + this.amplitude * sin(phase);
+            } else if(waveType === 'longitudinal'){
+              // Για διαμήκιο, μετατοπίζουμε το x, ενώ το y παραμένει σταθερό (ball.baseY)
+              ball.currentX = ball.x + this.amplitude * sin(phase);
+            }
           } else {
-            ball.currentY = ball.baseY;
+            if(waveType === 'transverse'){
+              ball.currentY = ball.baseY;
+            } else {
+              ball.currentX = ball.x;
+            }
           }
-          ellipse(ball.x, ball.currentY, this.ballSize, this.ballSize);
+          rectMode(CENTER);
+          if(waveType === 'transverse'){
+            // Κατακόρυφη μπάρα: πλάτος 2px, ύψος 60px
+            rect(ball.x, ball.currentY, 2, 60);
+          } else if(waveType === 'longitudinal'){
+            // Οριζόντια μπάρα: πλάτος 60px, ύψος 2px
+            rect(ball.currentX, ball.baseY, 60, 2);
+          }
         });
       }
     }
@@ -321,8 +341,8 @@
     let simTime = 0;
     let lastUpdate = 0;
     let speed = 100;
-    let greenVisible = true;
     const greenBaseY = 200;
+    let greenVisible = true;
 
     function setup() {
       const canvas = createCanvas(800, 400);
@@ -390,39 +410,48 @@
 
     function draw() {
       background(245);
-      
-      // Γραμμές ηρεμίας
+      // Γραμμές αναφοράς (η "ευθεία διάδοσης")
       stroke(200);
       drawingContext.setLineDash([5, 5]);
-      line(50, blueWave.yPosition, width-50, blueWave.yPosition);
-      line(50, redWave.yPosition, width-50, redWave.yPosition);
+      // Για εγκάρσιο κύμα, η ευθεία είναι οριζόντια στο baseLine,
+      // ενώ για διαμήκιο, μπορούμε να αφήσουμε την ευθεία ως οριζόντια για σύγκριση.
+      line(50, blueWave.baseLine, width-50, blueWave.baseLine);
+      line(50, redWave.baseLine, width-50, redWave.baseLine);
       line(50, greenBaseY, width-50, greenBaseY);
       drawingContext.setLineDash([]);
 
       if(isPlaying) {
         const now = millis();
-        simTime += (now - lastUpdate)/1000;
+        simTime += (now - lastUpdate) / 1000;
         lastUpdate = now;
       }
 
       blueWave.draw(simTime, speed);
       redWave.draw(simTime, speed);
 
-      // Πράσινο κύμα
+      // Πράσινο κύμα ως συνδυασμός (δείχνει πώς το μέσο μπορεί να επηρεάζεται)
       if(greenVisible) {
         fill(0, 200, 0);
-        for(let i=0; i<blueWave.balls.length; i++) {
+        for(let i = 0; i < blueWave.balls.length; i++) {
+          // Ο συνδυασμός των μετατοπίσεων των δύο κυμάτων
           const y = greenBaseY + 
-                   (blueWave.balls[i].currentY - blueWave.yPosition) + 
-                   (redWave.balls[i].currentY - redWave.yPosition);
+                   (blueWave.balls[i].currentY - blueWave.baseLine) + 
+                   (redWave.balls[i].currentY - redWave.baseLine);
           ellipse(blueWave.balls[i].x, y, 2, 2);
         }
       }
 
-      // Χέρια
+      // Σχεδίαση των "χειρών"
       if(isPlaying) {
-        image(blueWave.hand.img, blueWave.hand.x, blueWave.hand.y, 32, 32);
-        image(redWave.hand.img, redWave.hand.x, redWave.hand.y, 32, 32);
+        // Ανάλογα με τον τύπο κύματος, σχεδιάζουμε το χέρι στη μετατοπισμένη θέση
+        const waveType = select('#wave-type-select').value();
+        if(waveType === 'transverse'){
+          image(blueWave.hand.img, blueWave.hand.x, blueWave.hand.y, 32, 32);
+          image(redWave.hand.img, redWave.hand.x, redWave.hand.y, 32, 32);
+        } else if(waveType === 'longitudinal'){
+          image(blueWave.hand.img, blueWave.hand.x, blueWave.baseLine, 32, 32);
+          image(redWave.hand.img, redWave.hand.x, redWave.baseLine, 32, 32);
+        }
       }
     }
   </script>
