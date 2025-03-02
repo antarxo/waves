@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Κύματα - Toggle Δεξιά Χειριστήρια (p5 Button)</title>
+  <title>Κύματα - Toggle Δεξιά Χειριστήρια & Μεγαλύτερος Καμβάς</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
     body, html { margin: 0; padding: 0; overflow: hidden; }
@@ -36,7 +36,7 @@
     // Κατάσταση εμφάνισης δεξιού panel
     let rightPanelVisible = true;
     
-    // Ορισμός της κλάσης WaveSystem πριν από την πρώτη χρήση
+    // Ορισμός της κλάσης WaveSystem (πρέπει να οριστεί πριν τη χρήση της)
     class WaveSystem {
       constructor(color, baseY, waveKey) {
         this.waveKey = waveKey;
@@ -51,7 +51,7 @@
         this.balls = [];
         
         // Ανάθεση των DOM στοιχείων για επιλογές φάσης και κατεύθυνσης
-        if(this.waveKey === 'blue'){
+        if (this.waveKey === 'blue') {
           this.selectPhase = bluePhaseSelect;
           this.selectDirection = blueDirectionSelect;
         } else {
@@ -62,7 +62,7 @@
         this.selectPhase.changed(() => this.phase = parseInt(this.selectPhase.value()));
         this.selectDirection.changed(() => this.updateDirection());
         
-        // Η χρήση του width γίνεται όταν ο χρήστης δημιουργεί το αντικείμενο (μέσα στο setup μετά το createCanvas)
+        // Η χρήση του width γίνεται μετά τη δημιουργία του canvas (στο setup)
         this.hand = {
           x: (this.waveKey === 'blue' ? 50 : width - 50),
           y: this.baseY,
@@ -78,7 +78,7 @@
       
       initBalls() {
         this.balls = [];
-        for(let x = 50; x < width - 50; x += (this.ballSize + this.gap)) {
+        for (let x = 50; x < width - 50; x += (this.ballSize + this.gap)) {
           this.balls.push({ 
             x: x, 
             baseY: this.baseY, 
@@ -92,19 +92,19 @@
       
       updateStartTimes(speed) {
         const startPos = this.direction === 'left' ? 50 : width - 50;
-        for(const ball of this.balls) {
+        for (const ball of this.balls) {
           ball.startTime = speed > 0 ? abs(ball.x - startPos) / speed : Infinity;
         }
       }
       
       updatePositions(simTime) {
         const mode = waveTypeSelect.value();
-        for(const ball of this.balls) {
-          if(simTime >= ball.startTime) {
+        for (const ball of this.balls) {
+          if (simTime >= ball.startTime) {
             const t = simTime - ball.startTime;
             const phi = radians(this.phase) + TWO_PI * this.frequency * t;
             
-            if(mode === 'transverse') {
+            if (mode === 'transverse') {
               ball.currentY = ball.baseY + this.amplitude * sin(phi);
             } else {
               ball.currentX = ball.x + this.amplitude * sin(phi);
@@ -120,20 +120,20 @@
         const mode = waveTypeSelect.value();
         fill(this.color);
         
-        if(mode === 'transverse') {
-          for(const ball of this.balls) {
+        if (mode === 'transverse') {
+          for (const ball of this.balls) {
             ellipse(ball.x, ball.currentY, this.ballSize, this.ballSize);
           }
         } else {
           rectMode(CENTER);
-          for(const ball of this.balls) {
+          for (const ball of this.balls) {
             rect(ball.currentX, ball.baseY, 2, 60);
           }
         }
       }
       
       drawHand() {
-        if(!this.hand.img) return;
+        if (!this.hand.img) return;
         imageMode(CENTER);
         image(this.hand.img, this.hand.x, this.baseY, 32, 32);
       }
@@ -161,14 +161,14 @@
       leftPanel.style('justify-content', 'center');
       leftPanel.parent(mainContainer);
       
-      // Δημιουργία canvas και τοποθέτησή του στο leftPanel
-      let canvas = createCanvas(800, 400);
+      // Δημιουργία καμβά με αυξημένο πλάτος (1200)
+      let canvas = createCanvas(1200, 400);
       canvas.parent(leftPanel);
       
       // Global controls κάτω από το canvas
       globalControls = createDiv();
       globalControls.style('margin-top', '10px');
-      globalControls.style('width', '800px');
+      globalControls.style('width', '1200px');
       globalControls.style('background', 'rgba(255,255,255,0.9)');
       globalControls.style('padding', '10px');
       globalControls.style('display', 'flex');
@@ -363,7 +363,7 @@
       redDirectionSelect.option('Δεξιά', 'right');
       redDirectionSelect.parent(redDirGroup);
       
-      // Αρχικοποίηση των συστημάτων κυμάτων (κατόπιν δημιουργίας του canvas, οπότε το width είναι ορισμένο)
+      // Αρχικοποίηση των συστημάτων κυμάτων (μετά το createCanvas ώστε το width να είναι ορισμένο)
       blueWave = new WaveSystem(color(0, 100, 200), 100, 'blue');
       redWave = new WaveSystem(color(200, 0, 0), 300, 'red');
       blueWave.initBalls();
@@ -376,9 +376,9 @@
       // Βοηθητικές γραμμές αναφοράς
       stroke(200);
       drawingContext.setLineDash([5, 5]);
-      line(50, blueWave.baseY, width-50, blueWave.baseY);
-      line(50, redWave.baseY, width-50, redWave.baseY);
-      line(50, greenBaseY, width-50, greenBaseY);
+      line(50, blueWave.baseY, width - 50, blueWave.baseY);
+      line(50, redWave.baseY, width - 50, redWave.baseY);
+      line(50, greenBaseY, width - 50, greenBaseY);
       drawingContext.setLineDash([]);
       
       if (isPlaying) {
@@ -394,24 +394,27 @@
       if (blueVisibilityCheckbox.checked()) blueWave.drawWave();
       if (redVisibilityCheckbox.checked()) redWave.drawWave();
       
-      // Σχεδίαση πράσινου κύματος (μέσος όρος θέσεων)
+      // Σχεδίαση πράσινου "ελαστικού μέσου" (υπέρθεση) με πραγματικό πλάτος ως άθροισμα των επιμέρους (ballSize)
       if (greenVisible) {
         const mode = waveTypeSelect.value();
         noStroke();
         fill(0, 200, 0);
+        // Υπολογισμός του "real" πλάτους: άθροισμα των ballSize των δύο κυμάτων
+        let greenDiameter = blueWave.ballSize + redWave.ballSize;
+        
         for (let i = 0; i < blueWave.balls.length; i++) {
           let combinedPos;
           if (mode === 'transverse') {
             const yB = blueVisibilityCheckbox.checked() ? blueWave.balls[i].currentY : blueWave.baseY;
             const yR = redVisibilityCheckbox.checked() ? redWave.balls[i].currentY : redWave.baseY;
             combinedPos = (yB + yR) / 2;
-            ellipse(blueWave.balls[i].x, combinedPos, 8, 8);
+            ellipse(blueWave.balls[i].x, combinedPos, greenDiameter, greenDiameter);
           } else {
             const xB = blueVisibilityCheckbox.checked() ? blueWave.balls[i].currentX : blueWave.balls[i].x;
             const xR = redVisibilityCheckbox.checked() ? redWave.balls[i].currentX : redWave.balls[i].x;
             combinedPos = (xB + xR) / 2;
             rectMode(CENTER);
-            rect(combinedPos, greenBaseY, 2, 60);
+            rect(combinedPos, greenBaseY, greenDiameter, 60);
           }
         }
       }
@@ -420,23 +423,21 @@
       blueWave.drawHand();
       redWave.drawHand();
       
-      // Σχεδίαση p5 overlay κουμπιού toggle στο πάνω δεξί μέρος του canvas
+      // Σχεδίαση p5 overlay toggle κουμπιού στο πάνω δεξί μέρος του καμβά
       drawToggleButton();
     }
     
-    // Σχεδίαση του toggle κουμπιού στο canvas με χρήση p5.js
+    // Σχεδίαση του toggle κουμπιού πάνω στο canvas με χρήση p5.js
     function drawToggleButton() {
       let btnX = width - 150;
       let btnY = 10;
       let btnW = 140;
       let btnH = 30;
       
-      // Σχεδίαση ορθογωνίου κουμπιού με στρογγυλεμένες γωνίες
       fill(200);
       stroke(100);
       rect(btnX, btnY, btnW, btnH, 5);
       
-      // Εμφάνιση του κειμένου ανάλογα με την κατάσταση
       fill(0);
       noStroke();
       textAlign(CENTER, CENTER);
@@ -445,7 +446,7 @@
       text(btnText, btnX + btnW / 2, btnY + btnH / 2);
     }
     
-    // Αντίδραση στο κλικ στο canvas: ελέγχει αν έγινε κλικ μέσα στο toggle κουμπί
+    // Εναλλαγή εμφάνισης του δεξιού panel όταν γίνεται κλικ μέσα στην περιοχή του toggle κουμπιού
     function mousePressed() {
       let btnX = width - 150;
       let btnY = 10;
@@ -454,7 +455,7 @@
       if (mouseX >= btnX && mouseX <= btnX + btnW &&
           mouseY >= btnY && mouseY <= btnY + btnH) {
         rightPanelVisible = !rightPanelVisible;
-        if(rightPanelVisible){
+        if (rightPanelVisible) {
           rightPanel.show();
         } else {
           rightPanel.hide();
