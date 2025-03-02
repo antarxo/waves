@@ -2,395 +2,295 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Wave Simulator – Longitudinal Mode</title>
-  <!-- Φόρτωση p5.js και p5.dom -->
+  <title>Wave Simulator</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.dom.min.js"></script>
   <style>
-    /* Βασικό styling για τη διάταξη */
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: #f0f0f0;
-      font-family: Arial, sans-serif;
-      display: flex;
+    body { 
+      display: flex; 
       flex-direction: column;
-      align-items: center;
-      padding: 10px;
+      min-height: 100vh; 
+      font-family: Arial, sans-serif; 
+      background: #f0f0f0; 
     }
-    /* Container για το simulation και το overlay options */
-    #top-container {
-      position: relative;
-      width: 800px;
-      height: 400px;
-      margin-bottom: 10px;
+    #main-container { 
+      flex: 1;
+      display: flex; 
+      padding: 10px; 
+      gap: 15px; 
     }
-    #simulation-container {
-      width: 800px;
-      height: 400px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      background: white;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    #wave-section { 
+      flex: 3; 
+      background: white; 
+      border-radius: 8px; 
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
     }
-    /* Overlay options δεξιά του simulation */
-    #options-container {
-      width: 320px;
-      height: 400px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      background: rgba(255,255,255,0.95);
-      position: absolute;
-      top: 10px;
-      right: -340px;
-      padding: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      overflow-y: auto;
+    #controls-panel { 
+      width: 280px; 
+      background: white; 
+      padding: 15px; 
+      border-radius: 8px; 
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
     }
-    #controls-container {
-      width: 800px;
-      height: 120px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      background: white;
-      margin-top: 10px;
-      padding: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      position: relative;
-    }
+    .wave-controls { margin-bottom: 20px; }
+    h3 { color: #444; margin-bottom: 15px; }
+    .blue-title { color: #0066cc; }
+    .red-title { color: #cc0000; }
+    .control-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; color: #666; }
+    select, button { width: 100%; padding: 8px; margin-bottom: 10px; }
+    button { background: #007bff; color: white; border: none; cursor: pointer; }
+    #global-controls { display: flex; gap: 10px; margin-top: 20px; }
   </style>
 </head>
 <body>
-  <div id="top-container">
-    <div id="simulation-container"></div>
-    <div id="options-container"></div>
+  <div id="main-container">
+    <div id="wave-section">
+      <div id="canvas-container"></div>
+    </div>
+    
+    <div id="controls-panel">
+      <!-- Μπλε Κύμα -->
+      <div class="wave-controls">
+        <h3 class="blue-title">Μπλε Κύμα</h3>
+        <div class="control-group">
+          <label>Ύψος</label>
+          <div id="amplitude-slider-blue"></div>
+          <span id="amplitude-value-blue">20</span>
+        </div>
+        <div class="control-group">
+          <label>Συχνότητα</label>
+          <div id="frequency-slider-blue"></div>
+          <span id="frequency-value-blue">1</span>
+        </div>
+        <div class="control-group">
+          <label>Φάση</label>
+          <select class="phase-select" data-wave="blue">
+            <option value="0">0°</option>
+            <option value="180">180°</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Κατεύθυνση</label>
+          <select class="direction-select" data-wave="blue">
+            <option value="left">Αριστερά</option>
+            <option value="right">Δεξιά</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Κόκκινο Κύμα -->
+      <div class="wave-controls">
+        <h3 class="red-title">Κόκκινο Κύμα</h3>
+        <div class="control-group">
+          <label>Ύψος</label>
+          <div id="amplitude-slider-red"></div>
+          <span id="amplitude-value-red">20</span>
+        </div>
+        <div class="control-group">
+          <label>Συχνότητα</label>
+          <div id="frequency-slider-red"></div>
+          <span id="frequency-value-red">1</span>
+        </div>
+        <div class="control-group">
+          <label>Φάση</label>
+          <select class="phase-select" data-wave="red">
+            <option value="0">0°</option>
+            <option value="180">180°</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Κατεύθυνση</label>
+          <select class="direction-select" data-wave="red">
+            <option value="left">Αριστερά</option>
+            <option value="right">Δεξιά</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="global-controls">
+        <button id="playBtn">▶ Start</button>
+        <button id="resetBtn">↻ Reset</button>
+        <select id="green-visibility">
+          <option value="visible">Πράσινο</option>
+          <option value="hidden">Κρυφό</option>
+        </select>
+      </div>
+    </div>
   </div>
-  <div id="controls-container"></div>
 
   <script>
-    /* --- Global Ρυθμίσεις --- */
-    // Παράμετροι για τα κύματα (αλλάξτε τις τιμές μέσω των επιλογέων)
-    window.blueParams = { amplitude: 20, frequency: 1, phase: 0, direction: 'left' };
-    window.redParams  = { amplitude: 20, frequency: 1, phase: 0, direction: 'left' };
-    // Ορατότητα για κάθε κύμα (μέσω επιλογών)
-    window.blueVisible = true;
-    window.redVisible = true;
-    // Έλεγχος προσομοίωσης
-    window.isPlaying = false;
-    window.simTime = 0;
-    window.lastUpdate = 0;
-    window.simSpeed = 1;
-    // Ορατότητα του πράσινου κυμάτος (υπέρθεση)
-    window.greenVisible = true;
-    // Λειτουργία μέσου: false = Transverse (Εγκάρσιο), true = Longitudinal (Διάμηκες)
-    window.isLongitudinal = false;  // Αλλάξτε το μέσω του επιλογέα στο Controls Canvas
-    // Baseline για το πράσινο:
-    // Σε transverse mode, ορίζουμε y = 200.
-    // Σε longitudinal mode, ορίζουμε το greenBase ως { x: 200, y: 200 }.
-    if(!window.isLongitudinal){
-      window.greenBase = { y: 200 };
-    } else {
-      window.greenBase = { x: 200, y: 200 };
-    }
-    // Παράγοντας καθυστέρησης για κάθε void (σε δευτερόλεπτα) ώστε να ξεκινούν ακίνητα και μετά να "ξυπνούν"
-    const delayFactor = 200;
+    let blueWave, redWave;
+    let isPlaying = false;
+    let simTime = 0;
+    let lastUpdate = 0;
+    let speed = 100;
+    const greenBaseY = 200;
+    let greenVisible = true;
 
-    /* ------------------------------ */
-    /* p5 Sketch: Simulation Canvas   */
-    /* ------------------------------ */
-    let simulationSketch = function(p) {
-      let blueWave, redWave;
-      let handLeft, handRight;
-      
-      p.preload = function() {
-        // Φόρτωση εικόνων "χεριών". Αν δεν υπάρχουν, χρησιμοποιούνται fallback γραφικά.
-        handLeft = p.loadImage('handleft.png', undefined, function() {
-          let g = p.createGraphics(32, 32);
-          g.fill(0, 100, 200);
-          g.ellipse(16, 16, 32, 32);
-          handLeft = g;
-        });
-        handRight = p.loadImage('handright.png', undefined, function() {
-          let g = p.createGraphics(32, 32);
-          g.fill(200, 0, 0);
-          g.ellipse(16, 16, 32, 32);
-          handRight = g;
-        });
-      };
-      
-      p.setup = function() {
-        let canvas = p.createCanvas(800, 400);
-        canvas.parent('simulation-container');
-        p.noStroke();
-        p.imageMode(p.CENTER);
-        // Δημιουργία κυμάτων:
-        // Στο Transverse mode, το waveBase είναι το y όπου ξεκινούν τα voids (π.χ. 100 για το μπλε, 300 για το κόκκινο).
-        // Στο Longitudinal mode, κάθε void έχει ως base το αρχικό x, ενώ το y (βάση της μπάρας) παραμένει σταθερό (π.χ. 100 ή 300).
-        blueWave = new WaveSystem(p, p.color(0, 100, 200), 100, 'blue');
-        redWave  = new WaveSystem(p, p.color(200, 0, 0), 300, 'red');
-        blueWave.initVoids();
-        redWave.initVoids();
-        window.lastUpdate = p.millis();
-      };
-      
-      p.draw = function() {
-        p.background(245);
-        p.stroke(200);
-        // Σχεδίαση baseline του πράσινου μέσου
-        if(!window.isLongitudinal){
-          p.line(50, 200, p.width - 50, 200);
-        } else {
-          p.line(200, 50, 200, p.height - 50);
-        }
-        p.noStroke();
+    function preload() {
+      // Fallback αν δεν βρεθούν οι εικόνες
+      this._preloadHands = () => {
+        handLeft = createGraphics(32,32);
+        handLeft.fill(0,100,200);
+        handLeft.ellipse(16,16,32,32);
         
-        let now = p.millis();
-        if(window.isPlaying){
-          let dt = (now - window.lastUpdate) / 1000 * window.simSpeed;
-          window.simTime += dt;
-        }
-        window.lastUpdate = now;
-        
-        // Ενημέρωση και σχεδίαση των κυμάτων (καθένα εμφανίζεται μόνο αν το αντίστοιχο checkbox το ορίζει)
-        blueWave.update(window.simTime);
-        redWave.update(window.simTime);
-        if(window.blueVisible) { blueWave.draw(); }
-        if(window.redVisible) { redWave.draw(); }
-        
-        // Σχεδίαση του πράσινου κυμάτος ως υπέρθεση των δύο κυμάτων:
-        p.fill(0, 200, 0, 100);
-        if(!window.isLongitudinal) {
-          // Transverse mode: κάθε void απεικονίζεται ως κύκλος.
-          for (let i = 0; i < blueWave.voids.length; i++) {
-            let blueDisp = blueWave.voids[i].current - blueWave.voids[i].base;
-            let redDisp = redWave.voids[i].current - redWave.voids[i].base;
-            let finalY = window.greenBase.y + blueDisp + redDisp;
-            p.ellipse(blueWave.voids[i].centerX, finalY, blueWave.voidDiameter);
-          }
-        } else {
-          // Longitudinal mode: κάθε void αντιστοιχεί σε κατακόρυφη μπάρα 60px ύψους, με πλάτος ίσο με την διάμετρο της έλλειψης,
-          // και το κέντρο της μπάρας βρίσκεται στο ίδιο x με την έλλειψη.
-          for (let i = 0; i < blueWave.voids.length; i++) {
-            let blueDisp = blueWave.voids[i].current - blueWave.voids[i].base;
-            let redDisp = redWave.voids[i].current - redWave.voids[i].base;
-            let finalX = window.greenBase.x + blueDisp + redDisp;
-            p.rectMode(p.CENTER);
-            p.rect(finalX, window.greenBase.y, blueWave.voidDiameter, 60);
-          }
-        }
-      };
-      
-      // Κλάση WaveSystem – κάθε κύμα αποτελείται από "voids" (σημεία του μέσου)
-      function WaveSystem(p, col, waveBase, waveKey) {
-        this.p = p;
-        this.col = col;
-        // Στο Transverse mode, το waveBase είναι το y όπου ξεκινούν τα voids.
-        // Στο Longitudinal mode, τα voids έχουν ως base το αρχικό x.
-        this.waveBase = waveBase;
-        this.waveKey = waveKey;
-        this.voids = [];  // Κάθε void: { centerX, base, current, startTime }
-        this.voidDiameter = 4;  // Το πλάτος της έλλειψης (και της μπάρας)
-        this.gap = 2;
-        // "Χέρι" (πηγή του κύματος)
-        this.hand = { img: null, pos: { x: 50, y: waveBase } };
-        
-        // Τοποθέτηση του "χεριού" ανάλογα με την κατεύθυνση διάδοσης
-        this.updateHand = function() {
-          let params = (this.waveKey === 'blue') ? window.blueParams : window.redParams;
-          if(params.direction === 'left'){
-            this.hand.img = handRight;
-            this.hand.pos.x = p.width - 50;
-          } else {
-            this.hand.img = handLeft;
-            this.hand.pos.x = 50;
-          }
-        };
-        
-        // initVoids: Δημιουργεί τα voids κατά μήκος του x.
-        this.initVoids = function() {
-          this.voids = [];
-          for (let x = 50; x < p.width - 50; x += (this.voidDiameter + this.gap)) {
-            if (!window.isLongitudinal) {
-              // Transverse mode: το base είναι το waveBase (σταθερό y)
-              this.voids.push({ centerX: x, base: this.waveBase, current: this.waveBase, startTime: (x - 50) / delayFactor });
-            } else {
-              // Longitudinal mode: το base είναι το αρχικό x (για μετατόπιση στον x)
-              this.voids.push({ centerX: x, base: x, current: x, startTime: (x - 50) / delayFactor });
-            }
-          }
-          this.updateHand();
-        };
-        
-        // update: Εφαρμόζει την κυματική εξίσωση με καθυστέρηση για κάθε void.
-        this.update = function(t) {
-          let params = (this.waveKey === 'blue') ? window.blueParams : window.redParams;
-          let amplitude = params.amplitude;
-          let frequency = params.frequency;
-          let phase = p.radians(params.phase);
-          for (let i = 0; i < this.voids.length; i++) {
-            if (t >= this.voids[i].startTime) {
-              let dt = t - this.voids[i].startTime;
-              let displacement = amplitude * p.sin(phase + p.TWO_PI * frequency * dt);
-              this.voids[i].current = this.voids[i].base + displacement;
-            } else {
-              this.voids[i].current = this.voids[i].base;
-            }
-          }
-          // Ενημέρωση του "χεριού" βάσει του πρώτου void.
-          if (this.voids.length > 0) {
-            if (!window.isLongitudinal) {
-              this.hand.pos.y = this.voids[0].current;
-            } else {
-              this.hand.pos.x = this.voids[0].current;
-            }
-          }
-        };
-        
-        // draw: Σχεδιάζει τα voids και το "χέρι"
-        this.draw = function() {
-          let r = p.red(this.col), g = p.green(this.col), b = p.blue(this.col);
-          p.fill(r, g, b, 100);
-          if (!window.isLongitudinal) {
-            // Transverse mode: σχεδιάζουμε κάθε void ως μικρό κύκλο.
-            for (let i = 0; i < this.voids.length; i++) {
-              p.ellipse(this.voids[i].centerX, this.voids[i].current, this.voidDiameter);
-            }
-          } else {
-            // Longitudinal mode: σχεδιάζουμε κάθε void ως κατακόρυφη μπάρα 60px ύψους.
-            p.rectMode(p.CENTER);
-            for (let i = 0; i < this.voids.length; i++) {
-              p.rect(this.voids[i].current, this.waveBase, this.voidDiameter, 60);
-            }
-          }
-          // Σχεδιάζουμε το "χέρι"
-          if (this.hand.img) {
-            if (!window.isLongitudinal) {
-              p.image(this.hand.img, this.hand.pos.x, this.hand.pos.y, 32, 32);
-            } else {
-              p.image(this.hand.img, this.hand.pos.x, this.waveBase, 32, 32);
-            }
-          }
-        };
+        handRight = createGraphics(32,32);
+        handRight.fill(200,0,0);
+        handRight.ellipse(16,16,32,32);
       }
-    };
-    new p5(simulationSketch, 'simulation-container');
+      try {
+        handLeft = loadImage('handleft.png');
+        handRight = loadImage('handright.png');
+      } catch(e) { this._preloadHands(); }
+    }
 
-    /* ------------------------------ */
-    /* p5 Sketch: Options Canvas        */
-    /* ------------------------------ */
-    let optionsSketch = function(p) {
-      p.setup = function() {
-        let canvas = p.createCanvas(320,400);
-        canvas.parent('options-container');
-        p.textSize(16);
-        p.noLoop();
-        // --- Μπλε Κύμα ---
-        let blueTitle = p.createElement('h3', 'Μπλε Κύμα');
-        blueTitle.parent('options-container');
-        blueTitle.style('color', '#0066cc');
-        let blueChk = p.createCheckbox('Παρακολούθηση', window.blueVisible);
-        blueChk.parent('options-container');
-        blueChk.changed(function() { window.blueVisible = this.checked(); });
-        p.createElement('label', 'Ύψος').parent('options-container');
-        let blueAmp = p.createSlider(0, 100, window.blueParams.amplitude, 1);
-        blueAmp.parent('options-container');
-        blueAmp.changed(function() { window.blueParams.amplitude = parseInt(this.value()); });
-        p.createElement('label', 'Συχνότητα').parent('options-container');
-        let blueFreq = p.createSlider(0.1, 5, window.blueParams.frequency, 0.1);
-        blueFreq.parent('options-container');
-        blueFreq.changed(function() { window.blueParams.frequency = parseFloat(this.value()); });
-        p.createElement('label', 'Φάση').parent('options-container');
-        let bluePhase = p.createSelect();
-        bluePhase.parent('options-container');
-        bluePhase.option('0°', '0');
-        bluePhase.option('180°', '180');
-        bluePhase.changed(function() { window.blueParams.phase = parseInt(this.value()); });
-        p.createElement('label', 'Κατεύθυνση').parent('options-container');
-        let blueDir = p.createSelect();
-        blueDir.parent('options-container');
-        blueDir.option('Αριστερά', 'left');
-        blueDir.option('Δεξιά', 'right');
-        blueDir.changed(function() { window.blueParams.direction = this.value(); });
+    class WaveSystem {
+      constructor(color, yPos, waveKey) {
+        this.color = color;
+        this.yPos = yPos;
+        this.waveKey = waveKey;
+        this.balls = [];
+        this.amplitude = 20;
+        this.frequency = 1;
+        this.phase = 0;
+        this.direction = 'left';
+        this.ballSize = 4;
+        this.gap = 2;
         
-        // --- Κόκκινο Κύμα ---
-        let redTitle = p.createElement('h3', 'Κόκκινο Κύμα');
-        redTitle.parent('options-container');
-        redTitle.style('color', '#cc0000');
-        let redChk = p.createCheckbox('Παρακολούθηση', window.redVisible);
-        redChk.parent('options-container');
-        redChk.changed(function() { window.redVisible = this.checked(); });
-        p.createElement('label', 'Ύψος').parent('options-container');
-        let redAmp = p.createSlider(0, 100, window.redParams.amplitude, 1);
-        redAmp.parent('options-container');
-        redAmp.changed(function() { window.redParams.amplitude = parseInt(this.value()); });
-        p.createElement('label', 'Συχνότητα').parent('options-container');
-        let redFreq = p.createSlider(0.1, 5, window.redParams.frequency, 0.1);
-        redFreq.parent('options-container');
-        redFreq.changed(function() { window.redParams.frequency = parseFloat(this.value()); });
-        p.createElement('label', 'Φάση').parent('options-container');
-        let redPhase = p.createSelect();
-        redPhase.parent('options-container');
-        redPhase.option('0°', '0');
-        redPhase.option('180°', '180');
-        redPhase.changed(function() { window.redParams.phase = parseInt(this.value()); });
-        p.createElement('label', 'Κατεύθυνση').parent('options-container');
-        let redDir = p.createSelect();
-        redDir.parent('options-container');
-        redDir.option('Αριστερά', 'left');
-        redDir.option('Δεξιά', 'right');
-        redDir.changed(function() { window.redParams.direction = this.value(); });
-      };
-    };
-    new p5(optionsSketch, 'options-container');
+        this.selectDirection = select(`[data-wave="${waveKey}"].direction-select`);
+        this.selectPhase = select(`[data-wave="${waveKey}"].phase-select`);
+        
+        this.hand = {
+          img: waveKey === 'blue' ? handLeft : handRight,
+          x: 50,
+          y: yPos
+        };
 
-    /* ------------------------------ */
-    /* p5 Sketch: Controls Canvas       */
-    /* ------------------------------ */
-    let controlsSketch = function(p) {
-      p.setup = function() {
-        let canvas = p.createCanvas(800,120);
-        canvas.parent('controls-container');
-        p.textSize(16);
-        // Play/Pause κουμπί
-        let playBtn = p.createButton('▶ Start');
-        playBtn.parent('controls-container');
-        playBtn.position(20,20);
-        playBtn.mousePressed(function() {
-          window.isPlaying = !window.isPlaying;
-          playBtn.html(window.isPlaying ? '⏸ Pause' : '▶ Start');
+        this.selectDirection.changed(() => this.updateDirection());
+        this.selectPhase.changed(() => this.phase = parseInt(this.selectPhase.value()));
+      }
+
+      initBalls() {
+        const totalSpace = this.ballSize + this.gap;
+        for(let x = 50; x < width - 50; x += totalSpace) {
+          this.balls.push({ 
+            x: x,
+            baseY: this.yPos,
+            startTime: Infinity,
+            currentY: this.yPos 
+          });
+        }
+      }
+
+      updateDirection() {
+        this.direction = this.selectDirection.value();
+        this.hand.img = this.direction === 'left' ? handLeft : handRight;
+        this.hand.x = this.direction === 'left' ? 50 : width - 50;
+      }
+
+      update(simTime) {
+        this.balls.forEach(ball => {
+          if(simTime >= ball.startTime) {
+            const t = simTime - ball.startTime;
+            const phase = radians(this.phase) + TWO_PI * this.frequency * t;
+            ball.currentY = ball.baseY + this.amplitude * sin(phase);
+          } else {
+            ball.currentY = ball.baseY;
+          }
         });
-        // Reset κουμπί
-        let resetBtn = p.createButton('↻ Reset');
-        resetBtn.parent('controls-container');
-        resetBtn.position(120,20);
-        resetBtn.mousePressed(function() { window.simTime = 0; });
-        // Checkbox για εμφάνιση του πράσινου κυμάτος
-        let greenChk = p.createCheckbox('Εμφάνιση Πράσινου', window.greenVisible);
-        greenChk.parent('controls-container');
-        greenChk.position(220,20);
-        greenChk.changed(function() { window.greenVisible = this.checked(); });
-        // Slider ταχύτητας προσομοίωσης
-        p.createElement('label', 'Ταχύτητα').parent('controls-container').position(20,60);
-        let speedSlider = p.createSlider(0.1,5, window.simSpeed, 0.1);
-        speedSlider.parent('controls-container');
-        speedSlider.position(100,60);
-        speedSlider.changed(function() { window.simSpeed = parseFloat(this.value()); });
-        // Επιλογέας λειτουργίας μέσου: Transverse / Longitudinal
-        let modeSelect = p.createSelect();
-        modeSelect.parent('controls-container');
-        modeSelect.position(300,20);
-        modeSelect.option('Εγκάρσιο', 'transverse');
-        modeSelect.option('Διάμηκες', 'longitudinal');
-        modeSelect.changed(function() {
-          window.isLongitudinal = (this.value() === 'longitudinal');
-          window.simTime = 0;
-          location.reload();
+        if(this.balls.length > 0) this.hand.y = this.balls[0].currentY;
+      }
+
+      draw() {
+        fill(this.color);
+        this.balls.forEach(ball => ellipse(ball.x, ball.currentY, this.ballSize));
+        image(this.hand.img, this.hand.x, this.hand.y, 32, 32);
+      }
+    }
+
+    function setup() {
+      const canvas = createCanvas(800, 400);
+      canvas.parent('canvas-container');
+      noStroke();
+      imageMode(CENTER);
+
+      blueWave = new WaveSystem(color(0, 100, 200), 100, 'blue');
+      redWave = new WaveSystem(color(200, 0, 0), 300, 'red');
+      blueWave.initBalls();
+      redWave.initBalls();
+
+      // Sliders
+      createSliderWithUpdates(0, 100, 20, 1, 'amplitude-slider-blue', 'amplitude-value-blue', v => blueWave.amplitude = v);
+      createSliderWithUpdates(0.1, 5, 1, 0.1, 'frequency-slider-blue', 'frequency-value-blue', v => blueWave.frequency = v);
+      createSliderWithUpdates(0, 100, 20, 1, 'amplitude-slider-red', 'amplitude-value-red', v => redWave.amplitude = v);
+      createSliderWithUpdates(0.1, 5, 1, 0.1, 'frequency-slider-red', 'frequency-value-red', v => redWave.frequency = v);
+
+      // Controls
+      select('#playBtn').mousePressed(() => {
+        isPlaying = !isPlaying;
+        select('#playBtn').html(isPlaying ? '⏸ Pause' : '▶ Start');
+        lastUpdate = millis();
+      });
+      
+      select('#resetBtn').mousePressed(() => {
+        simTime = 0;
+        isPlaying = false;
+        blueWave.initBalls();
+        redWave.initBalls();
+      });
+
+      select('#green-visibility').changed(() => {
+        greenVisible = select('#green-visibility').value() === 'visible';
+      });
+    }
+
+    function createSliderWithUpdates(min, max, value, step, parentId, valueId, updateCallback) {
+      const parent = document.getElementById(parentId);
+      if(parent) {
+        const slider = createSlider(min, max, value, step);
+        slider.parent(parent);
+        slider.input(() => {
+          const val = step >= 1 ? slider.value() : slider.value().toFixed(1);
+          select('#'+valueId).html(val);
+          updateCallback(parseFloat(val));
         });
-      };
-      p.draw = function() {
-        p.background(220,220,220,50);
-      };
-    };
-    new p5(controlsSketch, 'controls-container');
+      }
+    }
+
+    function draw() {
+      background(245);
+      
+      // Γραμμές ηρεμίας
+      stroke(200);
+      line(50, blueWave.yPos, width-50, blueWave.yPos);
+      line(50, redWave.yPos, width-50, redWave.yPos);
+      line(50, greenBaseY, width-50, greenBaseY);
+
+      if(isPlaying) {
+        const now = millis();
+        simTime += (now - lastUpdate)/1000;
+        lastUpdate = now;
+      }
+
+      blueWave.update(simTime);
+      redWave.update(simTime);
+
+      // Σχεδίαση κυμάτων
+      blueWave.draw();
+      redWave.draw();
+
+      // Πράσινο κύμα
+      if(greenVisible) {
+        fill(0, 200, 0, 100);
+        for(let i=0; i<blueWave.balls.length; i++) {
+          const y = greenBaseY + 
+                   (blueWave.balls[i].currentY - blueWave.yPos) + 
+                   (redWave.balls[i].currentY - redWave.yPos);
+          ellipse(blueWave.balls[i].x, y, 8);
+        }
+      }
+    }
   </script>
 </body>
 </html>
