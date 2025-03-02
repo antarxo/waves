@@ -280,7 +280,7 @@
     let simTime = 0;
     let lastUpdate = 0;
     let speed = 100;
-    // Για την υπέρθεση χρησιμοποιούμε μια σταθερή γραμμή, π.χ. greenBaseY
+    // Το greenBaseY χρησιμεύει ως "γραμμή αναφοράς" για την υπέρθεση
     const greenBaseY = 200;
     let greenVisible = true;
 
@@ -367,27 +367,41 @@
       blueWave.draw(simTime, speed);
       redWave.draw(simTime, speed);
 
-      // Σχεδίαση της υπέρθεσης ("Πράσινο κύμα")
+      // Σχεδίαση της υπέρθεσης (overlay) για κάθε κύμα ξεχωριστά
       if(greenVisible) {
         const waveType = select('#wave-type-select').value();
-        fill(0, 200, 0);
         noStroke();
         if(waveType === 'transverse'){
-          // Για Εγκάρσιο: υπολογισμός από τις κάθετες μετατοπίσεις
+          // Για το Εγκάρσιο: σχεδίαση ξεχωριστών ελλείψεων
+          // Overlay για το μπλε κύμα (μπλε ελλίψεις)
+          fill(0, 100, 200);
           for(let i = 0; i < blueWave.balls.length; i++) {
-            const y = greenBaseY + 
-                      (blueWave.balls[i].currentY - blueWave.baseY) + 
-                      (redWave.balls[i].currentY - redWave.baseY);
-            ellipse(blueWave.balls[i].x, y, 4, 4);
+            const yBlue = greenBaseY + (blueWave.balls[i].currentY - blueWave.baseY);
+            ellipse(blueWave.balls[i].x, yBlue, 4, 4);
+          }
+          // Overlay για το κόκκινο κύμα (κόκκινες ελλίψεις)
+          fill(200, 0, 0);
+          for(let i = 0; i < redWave.balls.length; i++) {
+            const yRed = greenBaseY + (redWave.balls[i].currentY - redWave.baseY);
+            ellipse(redWave.balls[i].x, yRed, 4, 4);
           }
         } else if(waveType === 'διάμηκες'){
-          // Για Διάμηκες: υπολογισμός από τις οριζόντιες μετατοπίσεις και σχεδίαση ως μπάρες
+          // Για τις Διάμηκες: σχεδίαση ξεχωριστών μπαρών
+          // Overlay για το μπλε κύμα (μπλε μπάρες)
+          fill(0, 100, 200);
           rectMode(CENTER);
           for(let i = 0; i < blueWave.balls.length; i++) {
-            const dx = (blueWave.balls[i].currentX - blueWave.balls[i].x) + 
-                       (redWave.balls[i].currentX - redWave.balls[i].x);
-            const xCombined = blueWave.balls[i].x + dx;
-            rect(xCombined, greenBaseY, 2, 60);
+            const dxBlue = blueWave.balls[i].currentX - blueWave.balls[i].x;
+            const xBlue = blueWave.balls[i].x + dxBlue;
+            rect(xBlue, greenBaseY, 2, 60);
+          }
+          // Overlay για το κόκκινο κύμα (κόκκινες μπάρες)
+          fill(200, 0, 0);
+          rectMode(CENTER);
+          for(let i = 0; i < redWave.balls.length; i++) {
+            const dxRed = redWave.balls[i].currentX - redWave.balls[i].x;
+            const xRed = redWave.balls[i].x + dxRed;
+            rect(xRed, greenBaseY, 2, 60);
           }
         }
       }
