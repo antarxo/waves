@@ -2,16 +2,14 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Κύματα - Βελτιωμένη Διάταξη</title>
+  <title>Κύματα - Toggle Δεξιά Χειριστήρια</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
-    /* Βασικές ρυθμίσεις για το body ώστε να μην υπάρχουν scrollbars και να καταλαμβάνει ολόκληρη την οθόνη */
     body, html { margin: 0; padding: 0; overflow: hidden; }
   </style>
 </head>
 <body>
   <script>
-    // Variables για τα κύματα και τα controls
     let blueWave, redWave;
     let isPlaying = false;
     let simTime = 0;
@@ -22,7 +20,7 @@
     
     let handImgLeft, handImgRight;
     
-    // DOM Containers
+    // Containers για τη διάταξη
     let mainContainer, leftPanel, rightPanel;
     let globalControls;
     
@@ -35,12 +33,14 @@
     // Red wave controls
     let redVisibilityCheckbox, redAmplitudeSlider, redAmplitudeValue, redFrequencySlider, redFrequencyValue, redPhaseSelect, redDirectionSelect;
     
+    // Κουμπί για toggle δεξιά χειριστήρια
+    let toggleRightPanelButton;
+    
     function preload(){
       handImgLeft = loadImage('handleft.png');
       handImgRight = loadImage('handright.png');
     }
     
-    // Η κλάση WaveSystem παραμένει ως έχει
     class WaveSystem {
       constructor(color, baseY, waveKey) {
         this.waveKey = waveKey;
@@ -163,7 +163,7 @@
       let canvas = createCanvas(800, 400);
       canvas.parent(leftPanel);
       
-      // Global controls τοποθετούνται κάτω από το canvas (μέσα στο leftPanel)
+      // Δημιουργία Global controls κάτω από το canvas
       globalControls = createDiv();
       globalControls.style('margin-top', '10px');
       globalControls.style('width', '800px');
@@ -175,7 +175,7 @@
       globalControls.style('border-radius', '5px');
       globalControls.parent(leftPanel);
       
-      // Δεξιά στήλη: Controls Panel για τα κύματα
+      // Δημιουργία δεξιάς στήλης: Controls Panel
       rightPanel = createDiv();
       rightPanel.style('width', '300px');
       rightPanel.style('padding', '10px');
@@ -185,7 +185,14 @@
       rightPanel.style('border-radius', '5px');
       rightPanel.parent(mainContainer);
       
-      // Δημιουργία Global controls μέσα στο globalControls container
+      // Κουμπί toggle για τα δεξιά χειριστήρια (τοποθετούμε το πάνω δεξιά της οθόνης)
+      toggleRightPanelButton = createButton('Απόκρυψη Χειριστηρίων');
+      toggleRightPanelButton.style('position', 'absolute');
+      toggleRightPanelButton.style('top', '10px');
+      toggleRightPanelButton.style('right', '10px');
+      toggleRightPanelButton.mousePressed(toggleRightPanel);
+      
+      // Global controls μέσα στο globalControls container
       
       // Play/Pause button
       playBtn = createButton('▶');
@@ -370,7 +377,7 @@
     
     function draw() {
       background(245);
-      // Σχεδίαση βοηθητικών γραμμών αναφοράς
+      // Βοηθητικές γραμμές αναφοράς
       stroke(200);
       drawingContext.setLineDash([5, 5]);
       line(50, blueWave.baseY, width-50, blueWave.baseY);
@@ -391,12 +398,11 @@
       if (blueVisibilityCheckbox.checked()) blueWave.drawWave();
       if (redVisibilityCheckbox.checked()) redWave.drawWave();
       
-      // Σχεδίαση πράσινου κύματος ως μέσο όρο των θέσεων
+      // Σχεδίαση πράσινου κύματος (μέσος όρος θέσεων)
       if (greenVisible) {
         const mode = waveTypeSelect.value();
         noStroke();
         fill(0, 200, 0);
-        
         for (let i = 0; i < blueWave.balls.length; i++) {
           let combinedPos;
           if (mode === 'transverse') {
@@ -417,6 +423,17 @@
       // Σχεδίαση εικόνων χεριών
       blueWave.drawHand();
       redWave.drawHand();
+    }
+    
+    // Συνάρτηση για το toggle του δεξιού panel
+    function toggleRightPanel() {
+      if (rightPanel.style('display') === 'none') {
+        rightPanel.show();
+        toggleRightPanelButton.html('Απόκρυψη Χειριστηρίων');
+      } else {
+        rightPanel.hide();
+        toggleRightPanelButton.html('Εμφάνιση Χειριστηρίων');
+      }
     }
   </script>
 </body>
