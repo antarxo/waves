@@ -10,6 +10,14 @@
         border-radius: 8px;
         font-family: Arial, sans-serif;
       }
+      .wave-controls {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+      }
+      .wave-column {
+        flex: 1;
+      }
       .slider-group, .control-group {
         margin: 10px 0;
       }
@@ -33,6 +41,7 @@
         display: flex;
         align-items: center;
         gap: 15px;
+        margin-bottom: 20px;
       }
       #canvas-container {
         margin: 20px 0;
@@ -62,36 +71,62 @@
         </div>
       </div>
 
-      <!-- Μπλε Σύστημα -->
-      <div class="slider-group">
-        <span class="slider-label blue-label">Μπλε Ύψος: </span>
-        <div id="amplitude-slider-blue" style="display: inline-block; width: 150px;"></div>
-        <span id="amplitude-value-blue">20</span>
-        <select class="direction-select" data-wave="blue">
-          <option value="left">Από Αριστερά</option>
-          <option value="right">Από Δεξιά</option>
-        </select>
-      </div>
-      <div class="slider-group">
-        <span class="slider-label blue-label">Μπλε Συχνότητα: </span>
-        <div id="frequency-slider-blue" style="display: inline-block; width: 150px;"></div>
-        <span id="frequency-value-blue">1</span>
-      </div>
+      <div class="wave-controls">
+        <!-- Μπλε Σύστημα -->
+        <div class="wave-column" style="margin-right: 20px;">
+          <div class="slider-group">
+            <span class="slider-label blue-label">Μπλε Ύψος: </span>
+            <div id="amplitude-slider-blue" style="display: inline-block; width: 150px;"></div>
+            <span id="amplitude-value-blue">20</span>
+          </div>
+          <div class="slider-group">
+            <span class="slider-label blue-label">Μπλε Συχνότητα: </span>
+            <div id="frequency-slider-blue" style="display: inline-block; width: 150px;"></div>
+            <span id="frequency-value-blue">1</span>
+          </div>
+          <div class="slider-group">
+            <span class="slider-label blue-label">Μπλε Φάση: </span>
+            <select class="phase-select" data-wave="blue">
+              <option value="0">0°</option>
+              <option value="180">180°</option>
+            </select>
+          </div>
+          <div class="slider-group">
+            <span class="slider-label blue-label">Κατεύθυνση: </span>
+            <select class="direction-select" data-wave="blue">
+              <option value="left">Από Αριστερά</option>
+              <option value="right">Από Δεξιά</option>
+            </select>
+          </div>
+        </div>
 
-      <!-- Κόκκινο Σύστημα -->
-      <div class="slider-group">
-        <span class="slider-label red-label">Κόκκινο Ύψος: </span>
-        <div id="amplitude-slider-red" style="display: inline-block; width: 150px;"></div>
-        <span id="amplitude-value-red">20</span>
-        <select class="direction-select" data-wave="red">
-          <option value="left">Από Αριστερά</option>
-          <option value="right">Από Δεξιά</option>
-        </select>
-      </div>
-      <div class="slider-group">
-        <span class="slider-label red-label">Κόκκινο Συχνότητα: </span>
-        <div id="frequency-slider-red" style="display: inline-block; width: 150px;"></div>
-        <span id="frequency-value-red">1</span>
+        <!-- Κόκκινο Σύστημα -->
+        <div class="wave-column">
+          <div class="slider-group">
+            <span class="slider-label red-label">Κόκκινο Ύψος: </span>
+            <div id="amplitude-slider-red" style="display: inline-block; width: 150px;"></div>
+            <span id="amplitude-value-red">20</span>
+          </div>
+          <div class="slider-group">
+            <span class="slider-label red-label">Κόκκινο Συχνότητα: </span>
+            <div id="frequency-slider-red" style="display: inline-block; width: 150px;"></div>
+            <span id="frequency-value-red">1</span>
+          </div>
+          <div class="slider-group">
+            <span class="slider-label red-label">Κόκκινο Φάση: </span>
+            <select class="phase-select" data-wave="red">
+              <option value="0">0°</option>
+              <option value="180">180°</option>
+            </select>
+          </div>
+          <div class="slider-group">
+            <span class="slider-label red-label">Κατεύθυνση: </span>
+            <select class="direction-select" data-wave="red">
+              <option value="left">Από Αριστερά</option>
+              <option value="right">Από Δεξιά</option>
+            </select>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -111,10 +146,12 @@
           this.yPosition = yPosition;
           this.amplitude = 20;
           this.frequency = 1;
+          this.phase = 0; // Νέα ιδιότητα για φάση
           this.direction = 'left';
           this.ballSize = 2;
           this.gap = 1;
-          this.select = select(`[data-wave="${this.waveKey}"]`);
+          this.selectDirection = select(`[data-wave="${this.waveKey}"].direction-select`);
+          this.selectPhase = select(`[data-wave="${this.waveKey}"].phase-select`);
           this.hand = {
             img: handLeft,
             x: 50,
@@ -122,14 +159,11 @@
             firstBall: null
           };
           
-          this.select.changed(() => {
-            this.updateDirection();
-            this.updateHandPosition();
-          });
+          this.selectDirection.changed(() => this.updateDirection());
+          this.selectPhase.changed(() => this.phase = parseInt(this.selectPhase.value()));
         }
 
         updateHandPosition() {
-          // Ενημέρωση μόνο της θέσης X και εικόνας
           if(this.direction === 'left') {
             this.hand.img = handLeft;
             this.hand.x = 50;
@@ -141,7 +175,6 @@
         }
 
         updateFirstBall() {
-          // Εύρεση του πρώτου σημείου που θα κινηθεί
           const startPosition = this.direction === 'left' ? 50 : width - 50;
           this.hand.firstBall = this.balls.reduce((closest, ball) => {
             const distance = Math.abs(ball.x - startPosition);
@@ -163,7 +196,7 @@
         }
 
         updateDirection() {
-          this.direction = this.select.value();
+          this.direction = this.selectDirection.value();
           this.updateStartTimes(speed);
           this.updateHandPosition();
         }
@@ -181,7 +214,6 @@
           const wavelength = speed / this.frequency;
           fill(this.color);
           
-          // Ενημέρωση θέσης χεριού
           if(this.hand.firstBall) {
             this.hand.y = this.hand.firstBall.currentY;
           }
@@ -189,7 +221,7 @@
           this.balls.forEach(ball => {
             if(simTime >= ball.startTime) {
               const t = simTime - ball.startTime;
-              const phase = TWO_PI * this.frequency * t;
+              const phase = radians(this.phase) + TWO_PI * this.frequency * t;
               const yOffset = this.amplitude * sin(phase);
               ball.currentY = ball.baseY + yOffset;
             } else {
