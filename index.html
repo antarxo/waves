@@ -164,7 +164,7 @@
         this.waveKey = waveKey;
         this.balls = [];
         this.color = color;
-        // Για το "Εγκάρσιο" το baseLine είναι η y θέση, για τις "Διάμηκες" χρησιμεύει ως σημείο αναφοράς.
+        // Για το "Εγκάρσιο" το baseLine είναι η y θέση. Εδώ το ονομάζουμε baseY.
         this.baseY = baseLine;
         this.amplitude = 20;
         this.frequency = 1;
@@ -280,7 +280,7 @@
     let simTime = 0;
     let lastUpdate = 0;
     let speed = 100;
-    // Για την υπέρθεση χρησιμοποιούμε μια σταθερή γραμμή, π.χ. στο μέσο μεταξύ των δύο βασικών γραμμών
+    // Για την υπέρθεση χρησιμοποιούμε μια σταθερή γραμμή, π.χ. greenBaseY
     const greenBaseY = 200;
     let greenVisible = true;
 
@@ -373,7 +373,7 @@
         fill(0, 200, 0);
         noStroke();
         if(waveType === 'transverse'){
-          // Για Εγκάρσιο: το πράσινο κύμα ως συνάρτηση των κάθετων μετατοπίσεων
+          // Για Εγκάρσιο: υπολογισμός από τις κάθετες μετατοπίσεις
           for(let i = 0; i < blueWave.balls.length; i++) {
             const y = greenBaseY + 
                       (blueWave.balls[i].currentY - blueWave.baseY) + 
@@ -381,17 +381,18 @@
             ellipse(blueWave.balls[i].x, y, 4, 4);
           }
         } else if(waveType === 'διάμηκες'){
-          // Για Διάμηκες: το πράσινο κύμα ως συνάρτηση των οριζόντιων μετατοπίσεων
+          // Για Διάμηκες: υπολογισμός από τις οριζόντιες μετατοπίσεις και σχεδίαση ως μπάρες
+          rectMode(CENTER);
           for(let i = 0; i < blueWave.balls.length; i++) {
             const dx = (blueWave.balls[i].currentX - blueWave.balls[i].x) + 
                        (redWave.balls[i].currentX - redWave.balls[i].x);
             const xCombined = blueWave.balls[i].x + dx;
-            ellipse(xCombined, greenBaseY, 4, 4);
+            rect(xCombined, greenBaseY, 2, 60);
           }
         }
       }
 
-      // Σχεδίαση των "χειρών" ώστε να φαίνεται η κίνησή τους σε κάθε περίπτωση
+      // Σχεδίαση των "χειρών" ώστε να φαίνεται η κίνησή τους
       const waveType = select('#wave-type-select').value();
       if(isPlaying) {
         if(waveType === 'transverse'){
