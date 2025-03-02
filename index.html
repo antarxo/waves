@@ -487,8 +487,73 @@
       blueWave.updatePositions(simTime);
       redWave.updatePositions(simTime);
       
-      // Σχεδίαση κυμάτων (Μπλε και Κόκκινο) σύμφωνα με το mode (transverse/longitudinal)
+      // Σχεδίαση κυμάτων σύμφωνα με το mode (transverse/longitudinal)
       if (blueVisibilityCheckbox.checked()) blueWave.drawWave();
       if (redVisibilityCheckbox.checked()) redWave.drawWave();
       
-      // Σχεδίαση πράσινης υπέρθεσης (Συμβολή) με βάση τη μέση τιμή θέσης\n      if (greenContributionCheckbox.checked()) {\n        const mode = waveTypeSelect.value();\n        noStroke();\n        fill(0, 200, 0);\n        let greenDiameter = blueWave.ballSize * 2;\n        for (let i = 0; i < blueWave.balls.length; i++) {\n          let combinedPos;\n          if (mode === 'transverse') {\n            const yB = blueVisibilityCheckbox.checked() ? blueWave.balls[i].currentY : blueWave.baseY;\n            const yR = redVisibilityCheckbox.checked() ? redWave.balls[i].currentY : redWave.baseY;\n            combinedPos = (yB + yR) / 2;\n            ellipse(blueWave.balls[i].x, combinedPos, greenDiameter, greenDiameter);\n          } else {\n            const xB = blueVisibilityCheckbox.checked() ? blueWave.balls[i].currentX : blueWave.balls[i].x;\n            const xR = redVisibilityCheckbox.checked() ? redWave.balls[i].currentX : redWave.balls[i].x;\n            combinedPos = (xB + xR) / 2;\n            rectMode(CENTER);\n            rect(combinedPos, greenBaseY, greenDiameter, 60);\n          }\n        }\n      }\n\n      // Σχεδίαση των χεριών για κάθε κύμα\n      blueWave.drawHand();\n      redWave.drawHand();\n\n      // Σχεδίαση overlay toggle κουμπιού στο πάνω δεξί μέρος του καμβά\n      drawToggleButton();\n    }\n\n    // Σχεδίαση overlay toggle κουμπιού\n    function drawToggleButton() {\n      let btnX = width - 150;\n      let btnY = 10;\n      let btnW = 140;\n      let btnH = 30;\n      fill(200);\n      stroke(100);\n      rect(btnX, btnY, btnW, btnH, 5);\n      fill(0);\n      noStroke();\n      textAlign(CENTER, CENTER);\n      textSize(12);\n      let btnText = rightPanelVisible ? \"Απόκρυψη Χειριστηρίων\" : \"Εμφάνιση Χειριστηρίων\";\n      text(btnText, btnX + btnW / 2, btnY + btnH / 2);\n    }\n\n    // Εναλλαγή εμφάνισης του δεξιού panel\n    function mousePressed() {\n      let btnX = width - 150;\n      let btnY = 10;\n      let btnW = 140;\n      let btnH = 30;\n      if (mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH) {\n        rightPanelVisible = !rightPanelVisible;\n        if (rightPanelVisible) {\n          rightPanel.show();\n        } else {\n          rightPanel.hide();\n        }\n      }\n    }\n  </script>\n</body>\n</html>
+      // Σχεδίαση πράσινης υπέρθεσης (Συμβολή) με βάση τη μέση τιμή θέσης
+      if (greenContributionCheckbox.checked()) {
+        const mode = waveTypeSelect.value();
+        noStroke();
+        fill(0, 200, 0);
+        let greenDiameter = blueWave.ballSize * 2;
+        for (let i = 0; i < blueWave.balls.length; i++) {
+          let combinedPos;
+          if (mode === 'transverse') {
+            const yB = blueVisibilityCheckbox.checked() ? blueWave.balls[i].currentY : blueWave.baseY;
+            const yR = redVisibilityCheckbox.checked() ? redWave.balls[i].currentY : redWave.baseY;
+            combinedPos = (yB + yR) / 2;
+            ellipse(blueWave.balls[i].x, combinedPos, greenDiameter, greenDiameter);
+          } else {
+            const xB = blueVisibilityCheckbox.checked() ? blueWave.balls[i].currentX : blueWave.balls[i].x;
+            const xR = redVisibilityCheckbox.checked() ? redWave.balls[i].currentX : redWave.balls[i].x;
+            combinedPos = (xB + xR) / 2;
+            rectMode(CENTER);
+            rect(combinedPos, greenBaseY, greenDiameter, 60);
+          }
+        }
+      }
+      
+      // Σχεδίαση των χεριών για κάθε κύμα
+      blueWave.drawHand();
+      redWave.drawHand();
+      
+      // Σχεδίαση overlay toggle κουμπιού στο πάνω δεξί μέρος του καμβά
+      drawToggleButton();
+    }
+    
+    // Σχεδίαση overlay toggle κουμπιού
+    function drawToggleButton() {
+      let btnX = width - 150;
+      let btnY = 10;
+      let btnW = 140;
+      let btnH = 30;
+      fill(200);
+      stroke(100);
+      rect(btnX, btnY, btnW, btnH, 5);
+      fill(0);
+      noStroke();
+      textAlign(CENTER, CENTER);
+      textSize(12);
+      let btnText = rightPanelVisible ? "Απόκρυψη Χειριστηρίων" : "Εμφάνιση Χειριστηρίων";
+      text(btnText, btnX + btnW / 2, btnY + btnH / 2);
+    }
+    
+    // Εναλλαγή εμφάνισης του δεξιού panel
+    function mousePressed() {
+      let btnX = width - 150;
+      let btnY = 10;
+      let btnW = 140;
+      let btnH = 30;
+      if (mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH) {
+        rightPanelVisible = !rightPanelVisible;
+        if (rightPanelVisible) {
+          rightPanel.show();
+        } else {
+          rightPanel.hide();
+        }
+      }
+    }
+  </script>
+</body>
+</html>
