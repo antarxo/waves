@@ -3,113 +3,55 @@
 <head>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      font-family: Arial, sans-serif;
-      background: #f8f9fa;
+      display: flex; flex-direction: column; min-height: 100vh;
+      font-family: Arial, sans-serif; background: #f8f9fa;
     }
     #main-container {
-      flex: 1;
-      display: flex;
-      padding: 10px;
-      gap: 15px;
+      flex: 1; display: flex; padding: 10px; gap: 15px;
     }
     #wave-section {
-      flex: 3;
-      display: flex;
-      flex-direction: column;
-      background: white;
-      border-radius: 6px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      position: relative;
+      flex: 3; display: flex; flex-direction: column;
+      background: white; border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1); position: relative;
     }
-    #canvas-container {
-      flex: 1;
-      padding: 20px;
-    }
+    #canvas-container { flex: 1; padding: 20px; }
     #controls-panel {
-      width: 280px;
-      background: white;
-      padding: 15px;
-      border-radius: 6px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      width: 280px; background: white; padding: 15px;
+      border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       overflow-y: auto;
     }
     #global-controls-row {
-      display: flex;
-      gap: 15px;
-      padding: 10px;
-      background: white;
-      border-top: 1px solid #eee;
-      align-items: center;
+      display: flex; gap: 15px; padding: 10px;
+      background: white; border-top: 1px solid #eee; align-items: center;
     }
     .wave-controls {
-      margin-bottom: 15px;
-      padding-bottom: 15px;
-      border-bottom: 1px solid #eee;
+      margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee;
     }
-    h3 {
-      margin-bottom: 12px;
-      font-size: 1em;
-    }
+    h3 { margin-bottom: 12px; font-size: 1em; }
     .blue-title { color: #0066cc; }
     .red-title { color: #cc0000; }
-    .control-group {
-      margin-bottom: 12px;
-    }
-    label {
-      display: block;
-      font-size: 0.85em;
-      color: #666;
-      margin-bottom: 3px;
-    }
+    .control-group { margin-bottom: 12px; }
+    label { display: block; font-size: 0.85em; color: #666; margin-bottom: 3px; }
     select {
-      width: 100%;
-      padding: 6px;
-      font-size: 0.85em;
-      border: 1px solid #ddd;
-      border-radius: 3px;
+      width: 100%; padding: 6px; font-size: 0.85em;
+      border: 1px solid #ddd; border-radius: 3px;
     }
-    .p5-slider {
-      width: 100% !important;
-      margin: 8px 0 !important;
-    }
+    .p5-slider { width: 100% !important; margin: 8px 0 !important; }
     button {
-      padding: 6px 12px;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 3px;
-      cursor: pointer;
-      transition: background 0.3s;
-      font-size: 0.85em;
+      padding: 6px 12px; background: #007bff; color: white;
+      border: none; border-radius: 3px; cursor: pointer;
+      transition: background 0.3s; font-size: 0.85em;
     }
-    button:hover {
-      background: #0056b3;
-    }
+    button:hover { background: #0056b3; }
     .compact-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
     }
     .speed-control {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-left: auto;
+      display: flex; align-items: center; gap: 10px; margin-left: auto;
     }
-    #speed-value {
-      font-size: 0.9em;
-      color: #666;
-      min-width: 40px;
-    }
+    #speed-value { font-size: 0.9em; color: #666; min-width: 40px; }
   </style>
 </head>
 <body>
@@ -221,13 +163,12 @@
         this.waveKey = waveKey;
         this.balls = [];
         this.color = color;
-        // Για το "Εγκάρσιο" το baseLine είναι η y θέση, για τις "Διάμηκες" χρησιμοποιούμε το baseLine ως σημείο αναφοράς
+        // Για το "Εγκάρσιο" το baseLine είναι η y θέση, για τις "Διάμηκες" χρησιμεύει ως σημείο αναφοράς.
         this.baseLine = baseLine;
         this.amplitude = 20;
         this.frequency = 1;
         this.phase = 0;
         this.direction = 'left';
-        // Αρχικό μέγεθος για απεικόνιση (όπως στην αρχική υλοποίηση)
         this.ballSize = 2;
         this.gap = 1;
         
@@ -266,7 +207,7 @@
             x: x,
             baseY: this.baseLine,
             startTime: Infinity,
-            currentY: this.baseLine // για το "Εγκάρσιο"
+            currentY: this.baseLine // για "Εγκάρσιο"
             // Για τις "Διάμηκες" θα υπολογίσουμε την μετατόπιση στο x (ball.currentX)
           });
         }
@@ -321,7 +262,7 @@
           
           // Σχεδίαση ανάλογα με τον τύπο κύματος
           if(waveType === 'transverse'){
-            // Όπως στο αρχικό αρχείο: απεικόνιση με ellipse
+            // Απεικόνιση όπως στο αρχικό αρχείο με ellipse
             ellipse(ball.x, ball.currentY, this.ballSize, this.ballSize);
           } else if(waveType === 'διάμηκες'){
             // Κατακόρυφη μπάρα (rect) με πλάτος 2px και ύψος 60px,
@@ -409,7 +350,7 @@
       background(245);
       stroke(200);
       drawingContext.setLineDash([5, 5]);
-      // Γραμμές αναφοράς: Η "ευθεία διάδοσης" παραμένει οριζόντια στα ίδια σημεία
+      // Σχεδίαση των γραμμών αναφοράς (η "ευθεία διάδοσης")
       line(50, blueWave.baseY, width - 50, blueWave.baseY);
       line(50, redWave.baseY, width - 50, redWave.baseY);
       line(50, greenBaseY, width - 50, greenBaseY);
@@ -424,19 +365,30 @@
       blueWave.draw(simTime, speed);
       redWave.draw(simTime, speed);
 
-      // "Πράσινο κύμα" ως συνδυασμός των δύο
+      // Υπέρθεση ("Πράσινο κύμα") για κάθε τύπο κύματος
+      const waveType = select('#wave-type-select').value();
+      fill(0, 200, 0);
       if(greenVisible) {
-        fill(0, 200, 0);
-        for(let i = 0; i < blueWave.balls.length; i++) {
-          const y = greenBaseY + 
-                    (blueWave.balls[i].currentY - blueWave.baseY) + 
-                    (redWave.balls[i].currentY - redWave.baseY);
-          ellipse(blueWave.balls[i].x, y, 2, 2);
+        if(waveType === 'transverse'){
+          // Για εγκάρσιο: πρόσθεση των κάθετων μετατοπίσεων
+          for(let i = 0; i < blueWave.balls.length; i++) {
+            const y = greenBaseY + 
+                      (blueWave.balls[i].currentY - blueWave.baseY) + 
+                      (redWave.balls[i].currentY - redWave.baseY);
+            ellipse(blueWave.balls[i].x, y, 2, 2);
+          }
+        } else if(waveType === 'διάμηκες'){
+          // Για Διάμηκες: πρόσθεση των οριζόντιων μετατοπίσεων
+          for(let i = 0; i < blueWave.balls.length; i++) {
+            const dx = (blueWave.balls[i].currentX - blueWave.balls[i].x) + 
+                       (redWave.balls[i].currentX - redWave.balls[i].x);
+            const xCombined = blueWave.balls[i].x + dx;
+            ellipse(xCombined, greenBaseY, 2, 2);
+          }
         }
       }
 
       // Σχεδίαση των "χειρών" ώστε να φαίνεται η κίνησή τους σε κάθε περίπτωση
-      const waveType = select('#wave-type-select').value();
       if(isPlaying) {
         if(waveType === 'transverse'){
           image(blueWave.hand.img, blueWave.hand.x, blueWave.hand.y, 32, 32);
