@@ -42,7 +42,7 @@
       align-items: center;
       position: relative;
     }
-    /* Δεξί πάνελ με σχετική διάσταση για αποφυγή οριζόντιας κύλισης */
+    /* Δεξί πάνελ με σχετική διάσταση */
     .sidebar {
       grid-area: sidebar;
       background: rgba(255,255,255,0.95);
@@ -385,8 +385,8 @@
       sidebar = select('#sidebar');
       toggleBtn = select('#toggle-btn');
       
-      // Δημιουργία καμβά και τοποθέτησή του στο container
-      let canvas = createCanvas(1200, 400);
+      // Δημιουργία καμβά με πλάτος 1100 αντί για 1200 για να υπάρχει περισσότερος χώρος για το sidebar
+      let canvas = createCanvas(1100, 400);
       canvas.parent(select('.canvas-area'));
       
       // Global controls: Play/Pause, Reset, Toggle wave type, Ταχύτητα, Συμβολή
@@ -423,7 +423,7 @@
       greenContributionCheckbox = createCheckbox("Συμβολή:", true);
       greenContributionCheckbox.parent(globalControls);
       
-      // Ομαδοποίηση του slider ταχύτητας με σταθερή διάταξη (χωρίς αλλαγές)
+      // Ομαδοποίηση του slider ταχύτητας (χωρίς αλλαγές στο πάνελ των κουμπιών χειρισμού)
       let speedGroup = createDiv();
       speedGroup.style('display', 'flex');
       speedGroup.style('align-items', 'center');
@@ -470,7 +470,7 @@
         blueWave.amplitude = val;
       });
       
-      // Έλεγχοι για τη συχνότητα (χωρίς overflow) στο sidebar
+      // Έλεγχοι για τη συχνότητα στο sidebar για το Μπλε κύμα
       let blueFreqGroup = createDiv();
       blueFreqGroup.style('display', 'flex');
       blueFreqGroup.style('align-items', 'center');
@@ -526,7 +526,7 @@
       redVisibilityCheckbox = createCheckbox('Εμφάνιση', true);
       redVisibilityCheckbox.parent(redDiv);
       
-      // Έλεγχοι για το πλάτος
+      // Έλεγχοι για το πλάτος για το Κόκκινο κύμα
       let redAmpGroup = createDiv();
       redAmpGroup.style('display', 'flex');
       redAmpGroup.style('align-items', 'center');
@@ -544,7 +544,7 @@
         redWave.amplitude = val;
       });
       
-      // Έλεγχοι για τη συχνότητα στο sidebar
+      // Έλεγχοι για τη συχνότητα στο sidebar για το Κόκκινο κύμα
       let redFreqGroup = createDiv();
       redFreqGroup.style('display', 'flex');
       redFreqGroup.style('align-items', 'center');
