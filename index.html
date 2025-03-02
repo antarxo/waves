@@ -109,6 +109,24 @@
       grid-template-columns: 1fr 1fr;
       gap: 12px;
     }
+
+    #speed-control {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #eee;
+    }
+
+    .speed-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #speed-value {
+      font-size: 0.9em;
+      color: #666;
+      min-width: 40px;
+    }
   </style>
 </head>
 <body>
@@ -193,11 +211,21 @@
           <option value="hidden">Κρυφό</option>
         </select>
       </div>
+
+      <!-- Speed Control -->
+      <div id="speed-control">
+        <div class="control-group">
+          <label>Ταχύτητα</label>
+          <div class="speed-row">
+            <div id="speed-slider" style="flex:1;"></div>
+            <span id="speed-value">100</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
-    // Ο ίδιος JavaScript κώδικας χωρίς αλλαγές
     let handLeft, handRight;
 
     function preload() {
@@ -313,7 +341,7 @@
 
       // Speed Slider
       const speedSlider = createSlider(0, 500, 100);
-      speedSlider.parent('amplitude-slider-blue').id('speed-slider');
+      speedSlider.parent('speed-slider');
       speedSlider.input(() => {
         speed = speedSlider.value();
         select('#speed-value').html(speed);
