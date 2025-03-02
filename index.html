@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Wave Simulator – Προσομοίωση Κυμάτων</title>
+  <title>Wave Simulator – Longitudinal Mode</title>
   <!-- Φόρτωση p5.js και p5.dom -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.dom.min.js"></script>
@@ -17,7 +17,7 @@
       align-items: center;
       padding: 10px;
     }
-    /* Το container που περιέχει τον simulation καμβά και το overlay options */
+    /* Container για simulation και overlay options */
     #top-container {
       position: relative;
       width: 800px;
@@ -32,7 +32,7 @@
       background: white;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
-    /* Overlay στο simulation, δεξιά */
+    /* Overlay options – εμφανίζονται δεξιά του simulation */
     #options-container {
       width: 320px;
       height: 400px;
@@ -68,10 +68,10 @@
 
   <script>
     /* --- Global Ρυθμίσεις --- */
-    // Παράμετροι για τα κύματα
+    // Παράμετροι για κάθε κύμα
     window.blueParams = { amplitude: 20, frequency: 1, phase: 0, direction: 'left' };
     window.redParams  = { amplitude: 20, frequency: 1, phase: 0, direction: 'left' };
-    // Ορατότητα για κάθε κύμα (μέσω επιλογών)
+    // Ορατότητα για τα μεμονωμένα κύματα (μέσω επιλογών)
     window.blueVisible = true;
     window.redVisible = true;
     // Έλεγχος προσομοίωσης
@@ -84,14 +84,14 @@
     // Λειτουργία μέσου: false = Transverse (Εγκάρσιο), true = Longitudinal (Διάμηκες)
     window.isLongitudinal = false;
     // Baseline για το πράσινο:
-    // Transverse: y = 200
-    // Longitudinal: x = 200, y = 200
+    // Transverse: y = 200.
+    // Longitudinal: χρησιμοποιούμε x = 200 και σταθερό y = 200.
     if(!window.isLongitudinal){
       window.greenBase = { y: 200 };
     } else {
       window.greenBase = { x: 200, y: 200 };
     }
-    // Καθυστέρηση έναρξης κάθε void ανάλογα με τη θέση (σε δευτερόλεπτα)
+    // Παράγοντας καθυστέρησης για κάθε void (σε δευτερόλεπτα)
     const delayFactor = 200;
 
     /* ------------------------------ */
@@ -122,8 +122,9 @@
         canvas.parent('simulation-container');
         p.noStroke();
         p.imageMode(p.CENTER);
-        // Δημιουργία κυμάτων:
-        // Για transverse mode, το baseline (waveBase) είναι το y (π.χ. 100 για μπλε, 300 για κόκκινο)
+        // Δημιουργία κυμάτων.
+        // Στο Transverse mode, το baseline (waveBase) είναι το y (π.χ. 100 για το μπλε, 300 για το κόκκινο).
+        // Στο Longitudinal mode, τα voids έχουν base ίσο με το αρχικό x και το y παραμένει σταθερό (π.χ. 100 ή 300).
         blueWave = new WaveSystem(p, p.color(0,100,200), 100, 'blue');
         redWave  = new WaveSystem(p, p.color(200,0,0), 300, 'red');
         blueWave.initVoids();
@@ -149,7 +150,7 @@
         }
         window.lastUpdate = now;
         
-        // Ενημέρωση και σχεδίαση των κυμάτων (εμφανίζονται αν τα αντίστοιχα checkboxes το επιτρέπουν)
+        // Ενημέρωση και σχεδίαση των κυμάτων (εμφανίζονται μόνο αν τα αντίστοιχα checkboxes το επιτρέπουν)
         blueWave.update(window.simTime);
         redWave.update(window.simTime);
         if(window.blueVisible){ blueWave.draw(); }
@@ -158,7 +159,7 @@
         // Σχεδίαση του πράσινου κυμάτος ως υπέρθεση:
         p.fill(0,200,0,100);
         if(!window.isLongitudinal) {
-          // Transverse: κάθε void απεικονίζεται ως κύκλος, με τη μετατόπιση να εφαρμόζεται στον y
+          // Transverse mode: κάθε void απεικονίζεται ως κύκλος που ταλαντώνεται στον y.
           for(let i = 0; i < blueWave.voids.length; i++){
             let blueDisp = blueWave.voids[i].current - blueWave.voids[i].base;
             let redDisp = redWave.voids[i].current - redWave.voids[i].base;
@@ -166,7 +167,8 @@
             p.ellipse(blueWave.voids[i].centerX, finalY, blueWave.voidDiameter);
           }
         } else {
-          // Longitudinal: κάθε void απεικονίζεται ως κατακόρυφη μπάρα (60px ύψους) με το κέντρο στο void, μετατόπιση στον x.
+          // Longitudinal mode: κάθε void αντιστοιχεί σε κατακόρυφη μπάρα ύψους 60px,
+          // με πλάτος ίσο με τη διάμετρο της έλλειψης του transverse mode και κέντρο στην αντίστοιχη θέση.
           for(let i = 0; i < blueWave.voids.length; i++){
             let blueDisp = blueWave.voids[i].current - blueWave.voids[i].base;
             let redDisp = redWave.voids[i].current - redWave.voids[i].base;
@@ -177,19 +179,21 @@
         }
       };
       
-      // Κλάση WaveSystem – χρησιμοποιεί "voids" για τα σημεία του μέσου.
+      // Κλάση WaveSystem – κάθε κύμα αποτελείται από "voids"
       function WaveSystem(p, col, waveBase, waveKey) {
         this.p = p;
         this.col = col;
+        // Στο Transverse mode, το waveBase είναι το y όπου ξεκινούν τα voids.
+        // Στο Longitudinal mode, τα voids έχουν base ίσο με το αρχικό x.
         this.waveBase = waveBase;
         this.waveKey = waveKey;
         this.voids = [];  // Κάθε void: { centerX, base, current, startTime }
-        this.voidDiameter = 4;
+        this.voidDiameter = 4;  // Το πλάτος της έλλειψης (και της μπάρας)
         this.gap = 2;
         // "Χέρι" (πηγή του κύματος)
         this.hand = { img: null, pos: { x: 50, y: waveBase } };
         
-        // Τοποθέτηση του "χεριού" ανάλογα με την κατεύθυνση διάδοσης
+        // Τοποθέτηση του "χεριού" ανάλογα με την κατεύθυνση διάδοσης.
         this.updateHand = function() {
           let params = (this.waveKey === 'blue') ? window.blueParams : window.redParams;
           if(params.direction === 'left'){
@@ -206,11 +210,11 @@
           this.voids = [];
           for(let x = 50; x < p.width - 50; x += (this.voidDiameter + this.gap)){
             if(!window.isLongitudinal){
-              // Transverse mode: base είναι το waveBase (σταθερό y)
-              this.voids.push({ centerX: x, base: this.waveBase, current: this.waveBase, startTime: (x - 50)/delayFactor });
+              // Transverse: base είναι το waveBase (σταθερό y)
+              this.voids.push({ centerX: x, base: this.waveBase, current: this.waveBase, startTime: (x - 50) / delayFactor });
             } else {
-              // Longitudinal mode: base είναι το αρχικό x (για μετατόπιση στον x)
-              this.voids.push({ centerX: x, base: x, current: x, startTime: (x - 50)/delayFactor });
+              // Longitudinal: base είναι το αρχικό x, και θα ταλαντώνονται στον x
+              this.voids.push({ centerX: x, base: x, current: x, startTime: (x - 50) / delayFactor });
             }
           }
           this.updateHand();
@@ -231,6 +235,7 @@
               this.voids[i].current = this.voids[i].base;
             }
           }
+          // Ενημέρωση του "χεριού" βάσει του πρώτου void.
           if(this.voids.length > 0) {
             if(!window.isLongitudinal){
               this.hand.pos.y = this.voids[0].current;
@@ -342,6 +347,7 @@
         let canvas = p.createCanvas(800,120);
         canvas.parent('controls-container');
         p.textSize(16);
+        // Play/Pause κουμπί
         let playBtn = p.createButton('▶ Start');
         playBtn.parent('controls-container');
         playBtn.position(20,20);
@@ -349,19 +355,23 @@
           window.isPlaying = !window.isPlaying;
           playBtn.html(window.isPlaying ? '⏸ Pause' : '▶ Start');
         });
+        // Reset κουμπί
         let resetBtn = p.createButton('↻ Reset');
         resetBtn.parent('controls-container');
         resetBtn.position(120,20);
         resetBtn.mousePressed(function() { window.simTime = 0; });
+        // Checkbox για εμφάνιση του πράσινου κυμάτος
         let greenChk = p.createCheckbox('Εμφάνιση Πράσινου', window.greenVisible);
         greenChk.parent('controls-container');
         greenChk.position(220,20);
         greenChk.changed(function() { window.greenVisible = this.checked(); });
+        // Slider ταχύτητας προσομοίωσης
         p.createElement('label', 'Ταχύτητα').parent('controls-container').position(20,60);
         let speedSlider = p.createSlider(0.1,5, window.simSpeed, 0.1);
         speedSlider.parent('controls-container');
         speedSlider.position(100,60);
         speedSlider.changed(function() { window.simSpeed = parseFloat(this.value()); });
+        // Επιλογέας λειτουργίας μέσου: Transverse / Longitudinal
         let modeSelect = p.createSelect();
         modeSelect.parent('controls-container');
         modeSelect.position(300,20);
