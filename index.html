@@ -146,7 +146,7 @@
           this.yPosition = yPosition;
           this.amplitude = 20;
           this.frequency = 1;
-          this.phase = 0; // Νέα ιδιότητα για φάση
+          this.phase = 0;
           this.direction = 'left';
           this.ballSize = 2;
           this.gap = 1;
@@ -310,6 +310,25 @@
       function draw() {
         background(220);
         
+        // Σχεδίαση γραμμών ηρεμίας
+        stroke(200);
+        strokeWeight(1);
+        drawingContext.setLineDash([5, 5]);
+        
+        // Γραμμή για μπλε κύμα
+        stroke(0, 100, 200, 50);
+        line(50, blueWave.yPosition, width - 50, blueWave.yPosition);
+        
+        // Γραμμή για κόκκινο κύμα
+        stroke(200, 0, 0, 50);
+        line(50, redWave.yPosition, width - 50, redWave.yPosition);
+        
+        // Γραμμή για πράσινο κύμα
+        stroke(0, 200, 0, 50);
+        line(50, greenBaseY, width - 50, greenBaseY);
+        
+        drawingContext.setLineDash([]);
+
         if(isPlaying) {
           const now = millis();
           simTime += (now - lastUpdate) / 1000;
