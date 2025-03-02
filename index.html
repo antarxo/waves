@@ -53,9 +53,11 @@
     /* Global controls που τοποθετούνται κάτω από τον καμβά */
     .global-controls {
       margin-top: 10px;
-      width: 1200px;
+      width: 90%;
+      max-width: 1200px;
       padding: 10px;
       display: flex;
+      flex-wrap: wrap;
       justify-content: space-around;
       align-items: center;
       background: rgba(255,255,255,0.9);
@@ -79,7 +81,7 @@
     }
     /* Custom styling για select elements */
     select {
-      font-size: 16px;
+      font-size: 14px;
       padding: 6px 10px;
       border: 1px solid #ccc;
       border-radius: 8px;
@@ -87,12 +89,12 @@
       appearance: none;
       -webkit-appearance: none;
       -moz-appearance: none;
-      /* Προσαρμοσμένο arrow icon (Base64) */
       background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTAgMC41bDEyIDMgLTEyIDMiIGZpbGw9IiM3Nzc3NzciLz48L3N2Zz4=');
       background-repeat: no-repeat;
       background-position: right 10px center;
       cursor: pointer;
       transition: border-color 0.3s;
+      max-width: 120px;
     }
     select:focus {
       outline: none;
@@ -115,6 +117,50 @@
     label {
       cursor: pointer;
       margin-right: 5px;
+    }
+    /* Styling για το toggle switch του wave type */
+    .toggle-container {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .toggle-switch {
+      position: relative;
+      width: 50px;
+      height: 24px;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider-toggle {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: 0.4s;
+      border-radius: 24px;
+    }
+    .slider-toggle:before {
+      position: absolute;
+      content: \"\";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider-toggle {
+      background-color: #007BFF;
+    }
+    input:checked + .slider-toggle:before {
+      transform: translateX(26px);
     }
     /* Overlay toggle button για το canvas */
     .toggle-btn {
@@ -162,9 +208,12 @@
     // Αναφορές σε DOM στοιχεία
     let globalControls, sidebar, toggleBtn;
     
-    // Global controls (δημιουργούνται μέσω p5.js)
-    let playBtn, resetBtn, waveTypeSelect, speedSlider, speedValue;
+    // Global controls που δημιουργούνται μέσω p5.js
+    let playBtn, resetBtn, speedSlider, speedValue;
     let greenContributionCheckbox;
+    
+    // Νέος toggle για τον τύπο κύματος (αντί για select)
+    let waveTypeToggle, waveTypeLabel;
     
     // Ελέγχοι για το Μπλε κύμα
     let blueVisibilityCheckbox, blueAmplitudeSlider, blueAmplitudeValue;
@@ -177,7 +226,12 @@
     // Κατάσταση εμφάνισης του sidebar
     let sidebarVisible = true;
     
-    // Βοηθητικές συναρτήσεις
+    // Βοηθητική συνάρτηση για τον τύπο κύματος με το νέο toggle
+    function getWaveMode() {
+      return waveTypeToggle.checked() ? 'transverse' : 'longitudinal';
+    }
+    
+    // Βοηθητικές συναρτήσεις για εύρεση του πρώτου/τελευταίου κινούμενου στοιχείου
     function getFirstMovingBallFor(balls) {
       for (let i = 0; i < balls.length; i++) {
         if (simTime >= balls[i].startTime) return balls[i];
@@ -204,6 +258,7 @@
         this.gap = 1;
         this.balls = [];
         
+        // Ανάθεση επιλογέων για "Αρχική φάση:" και "Διάδοση προς τα:" παραμένει ως έχει
         if (this.waveKey === 'blue') {
           this.selectPhase = bluePhaseSelect;
           this.selectDirection = blueDirectionSelect;
@@ -248,7 +303,7 @@
       }
       
       updatePositions(simTime) {
-        const mode = waveTypeSelect.value();
+        const mode = getWaveMode();
         for (const ball of this.balls) {
           if (simTime >= ball.startTime) {
             const t = simTime - ball.startTime;
@@ -268,7 +323,7 @@
       }
       
       drawWave() {
-        const mode = waveTypeSelect.value();
+        const mode = getWaveMode();
         let fillColor = this.color;
         if ((this.waveKey === 'blue' && !blueVisibilityCheckbox.checked()) ||
             (this.waveKey === 'red' && !redVisibilityCheckbox.checked())) {
@@ -290,7 +345,7 @@
       }
       
       drawHand() {
-        const mode = waveTypeSelect.value();
+        const mode = getWaveMode();
         let ball = null;
         if (mode === 'transverse') {
           if (this.direction === "left") {
@@ -346,7 +401,7 @@
       let canvas = createCanvas(1200, 400);
       canvas.parent(select('.canvas-area'));
       
-      // Global controls: Play/Pause, Reset, Επιλογή τύπου κύματος, Ταχύτητα, Συμβολή
+      // Global controls: Play/Pause, Reset, Toggle wave type, Ταχύτητα, Συμβολή
       playBtn = createButton('▶');
       playBtn.addClass('p5Button');
       playBtn.parent(globalControls);
@@ -366,10 +421,16 @@
         redWave.initBalls();
       });
       
-      waveTypeSelect = createSelect();
-      waveTypeSelect.option('Εγκάρσιο', 'transverse');
-      waveTypeSelect.option('Διάμηκες', 'longitudinal');
-      waveTypeSelect.parent(globalControls);
+      // Αντί για select για τον τύπο κύματος, δημιουργούμε ένα toggle switch
+      let toggleContainer = createDiv().addClass('toggle-container');
+      toggleContainer.parent(globalControls);
+      waveTypeToggle = createCheckbox("", true);
+      waveTypeToggle.parent(toggleContainer);
+      waveTypeLabel = createSpan("Εγκάρσιο");
+      waveTypeLabel.parent(toggleContainer);
+      waveTypeToggle.changed(() => {
+        waveTypeLabel.html(waveTypeToggle.checked() ? "Εγκάρσιο" : "Διάμηκες");
+      });
       
       greenContributionCheckbox = createCheckbox("Συμβολή:", true);
       greenContributionCheckbox.parent(globalControls);
@@ -391,14 +452,11 @@
       let blueDiv = createDiv();
       blueDiv.addClass('panel');
       blueDiv.parent(sidebar);
-      
       let blueTitle = createElement('h3', 'Μπλε Κύμα');
       blueTitle.style('color', '#0066cc');
       blueTitle.parent(blueDiv);
-      
       blueVisibilityCheckbox = createCheckbox('Εμφάνιση', true);
       blueVisibilityCheckbox.parent(blueDiv);
-      
       let blueAmpGroup = createDiv();
       blueAmpGroup.parent(blueDiv);
       let blueAmpLabel = createElement('label', 'Πλάτος:');
@@ -412,7 +470,6 @@
         blueAmplitudeValue.html(val);
         blueWave.amplitude = val;
       });
-      
       let blueFreqGroup = createDiv();
       blueFreqGroup.parent(blueDiv);
       let blueFreqLabel = createElement('label', 'Συχνότητα:');
@@ -426,7 +483,6 @@
         blueFrequencyValue.html(val);
         blueWave.frequency = val;
       });
-      
       let bluePhaseGroup = createDiv();
       bluePhaseGroup.parent(blueDiv);
       let bluePhaseLabel = createElement('label', 'Αρχική φάση:');
@@ -435,7 +491,6 @@
       bluePhaseSelect.option('0°', '0');
       bluePhaseSelect.option('180°', '180');
       bluePhaseSelect.parent(bluePhaseGroup);
-      
       let blueDirGroup = createDiv();
       blueDirGroup.parent(blueDiv);
       let blueDirLabel = createElement('label', 'Διάδοση προς τα:');
@@ -449,14 +504,11 @@
       let redDiv = createDiv();
       redDiv.addClass('panel');
       redDiv.parent(sidebar);
-      
       let redTitle = createElement('h3', 'Κόκκινο Κύμα');
       redTitle.style('color', '#cc0000');
       redTitle.parent(redDiv);
-      
       redVisibilityCheckbox = createCheckbox('Εμφάνιση', true);
       redVisibilityCheckbox.parent(redDiv);
-      
       let redAmpGroup = createDiv();
       redAmpGroup.parent(redDiv);
       let redAmpLabel = createElement('label', 'Πλάτος:');
@@ -470,7 +522,6 @@
         redAmplitudeValue.html(val);
         redWave.amplitude = val;
       });
-      
       let redFreqGroup = createDiv();
       redFreqGroup.parent(redDiv);
       let redFreqLabel = createElement('label', 'Συχνότητα:');
@@ -484,7 +535,6 @@
         redFrequencyValue.html(val);
         redWave.frequency = val;
       });
-      
       let redPhaseGroup = createDiv();
       redPhaseGroup.parent(redDiv);
       let redPhaseLabel = createElement('label', 'Αρχική φάση:');
@@ -493,7 +543,6 @@
       redPhaseSelect.option('0°', '0');
       redPhaseSelect.option('180°', '180');
       redPhaseSelect.parent(redPhaseGroup);
-      
       let redDirGroup = createDiv();
       redDirGroup.parent(redDiv);
       let redDirLabel = createElement('label', 'Διάδοση προς τα:');
@@ -523,7 +572,6 @@
     
     function draw() {
       background(245);
-      
       // Βοηθητικές γραμμές αναφοράς
       stroke(200);
       drawingContext.setLineDash([5, 5]);
@@ -545,7 +593,7 @@
       if (redVisibilityCheckbox.checked()) redWave.drawWave();
       
       if (greenContributionCheckbox.checked()) {
-        const mode = waveTypeSelect.value();
+        const mode = getWaveMode();
         noStroke();
         fill(0, 200, 0);
         let greenDiameter = blueWave.ballSize * 2;
