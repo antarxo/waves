@@ -3,17 +3,66 @@
 <head>
   <meta charset="UTF-8">
   <title>Δημιουργία μηχανικών κυμάτων</title>
+  <!-- Εισαγωγή Google Font Roboto για μοντέρνα εμφάνιση -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
-    /* Γενικό styling για μοντέρνα εμφάνιση */
+    /* Βασικό styling με χρήση της γραμματοσειράς Roboto */
     body, html {
       margin: 0;
       padding: 0;
-      overflow: hidden;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Roboto', sans-serif;
       background-color: #f7f7f7;
+      overflow: hidden;
+      height: 100vh;
     }
-    /* Styling για κουμπιά και interactive στοιχεία */
+    /* Χρήση CSS Grid για την ανατοποθέτηση */
+    .main-container {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      grid-template-columns: 1fr auto;
+      grid-template-areas:
+         "header header"
+         "canvas sidebar";
+      height: 100vh;
+    }
+    .header {
+      grid-area: header;
+      background: #007BFF;
+      color: #fff;
+      text-align: center;
+      padding: 15px;
+      font-size: 24px;
+    }
+    .canvas-area {
+      grid-area: canvas;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+    .sidebar {
+      grid-area: sidebar;
+      background: rgba(255,255,255,0.95);
+      padding: 15px;
+      border-left: 1px solid #ddd;
+      overflow-y: auto;
+      width: 320px;
+    }
+    /* Global controls που τοποθετούνται κάτω από τον καμβά */
+    .global-controls {
+      margin-top: 10px;
+      width: 1200px;
+      padding: 10px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background: rgba(255,255,255,0.9);
+      border: 1px solid #ddd;
+      border-radius: 10px;
+    }
+    /* Στυλ για κουμπιά και interactive στοιχεία */
     button, .p5Button {
       background: #007BFF;
       color: #fff;
@@ -28,34 +77,35 @@
       background: #0056b3;
       transform: scale(1.03);
     }
-    /* Styling για τα panels */
+    /* Custom styling για select elements */
+    select {
+      font-size: 16px;
+      padding: 6px 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background-color: #fff;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      /* Προσαρμοσμένο arrow icon (Base64) */
+      background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTAgMC41bDEyIDMgLTEyIDMiIGZpbGw9IiM3Nzc3NzciLz48L3N2Zz4=');
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      cursor: pointer;
+      transition: border-color 0.3s;
+    }
+    select:focus {
+      outline: none;
+      border-color: #007BFF;
+    }
+    /* Styling για τα panels μέσα στο sidebar */
     .panel {
       background: rgba(255,255,255,0.95);
       border: 1px solid #ddd;
       border-radius: 10px;
       box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
       padding: 10px;
-    }
-    /* Global controls container */
-    .global-controls {
-      margin-top: 10px;
-      width: 1200px;
-      padding: 10px;
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      background: rgba(255,255,255,0.9);
-      border: 1px solid #ddd;
-      border-radius: 10px;
-    }
-    /* Δεξί panel για τα controls των κυμάτων */
-    .right-panel {
-      width: 300px;
-      padding: 15px;
-      background: rgba(255,255,255,0.9);
-      overflow-y: auto;
-      border: 1px solid #ddd;
-      border-radius: 10px;
+      margin-bottom: 15px;
     }
     /* Hover effects για sliders και checkboxes */
     input[type=range]:hover, input[type=checkbox]:hover {
@@ -64,10 +114,39 @@
     }
     label {
       cursor: pointer;
+      margin-right: 5px;
+    }
+    /* Overlay toggle button για το canvas */
+    .toggle-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #ccc;
+      color: #000;
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: background 0.3s;
+    }
+    .toggle-btn:hover {
+      background: #bbb;
     }
   </style>
 </head>
 <body>
+  <div class="main-container">
+    <div class="header">Δημιουργία μηχανικών κυμάτων</div>
+    <div class="canvas-area">
+      <!-- Ο καμβάς δημιουργείται μέσω p5.js -->
+      <div id="p5-canvas"></div>
+      <div class="global-controls" id="global-controls"></div>
+      <div class="toggle-btn" id="toggle-btn">Απόκρυψη Χειριστηρίων</div>
+    </div>
+    <div class="sidebar" id="sidebar">
+      <!-- Ελέγχοι για τα κύματα τοποθετούνται εδώ -->
+    </div>
+  </div>
   <script>
     // Global μεταβλητές προσομοίωσης και ελέγχου
     let blueWave, redWave;
@@ -80,13 +159,12 @@
     // Εικόνες χεριών
     let handImgLeft, handImgRight;
     
-    // Containers διάταξης
-    let mainContainer, leftPanel, rightPanel;
-    let globalControls;
+    // Αναφορές σε DOM στοιχεία
+    let globalControls, sidebar, toggleBtn;
     
     // Global controls (δημιουργούνται μέσω p5.js)
     let playBtn, resetBtn, waveTypeSelect, speedSlider, speedValue;
-    let greenContributionCheckbox; // Checkbox "Συμβολή:"
+    let greenContributionCheckbox;
     
     // Ελέγχοι για το Μπλε κύμα
     let blueVisibilityCheckbox, blueAmplitudeSlider, blueAmplitudeValue;
@@ -96,10 +174,10 @@
     let redVisibilityCheckbox, redAmplitudeSlider, redAmplitudeValue;
     let redFrequencySlider, redFrequencyValue, redPhaseSelect, redDirectionSelect;
     
-    // Κατάσταση εμφάνισης δεξιού panel
-    let rightPanelVisible = true;
+    // Κατάσταση εμφάνισης του sidebar
+    let sidebarVisible = true;
     
-    // Βοηθητικές συναρτήσεις για εύρεση του πρώτου/τελευταίου κινούμενου σημείου
+    // Βοηθητικές συναρτήσεις
     function getFirstMovingBallFor(balls) {
       for (let i = 0; i < balls.length; i++) {
         if (simTime >= balls[i].startTime) return balls[i];
@@ -113,7 +191,6 @@
       return null;
     }
     
-    // Ορισμός της κλάσης WaveSystem
     class WaveSystem {
       constructor(color, baseY, waveKey) {
         this.waveKey = waveKey;
@@ -122,13 +199,11 @@
         this.amplitude = 20;
         this.frequency = 1;
         this.phase = 0;
-        // Default: "Δεξιά" με τιμή "left" σημαίνει ότι το κύμα ξεκινά από το αριστερό άκρο και προοδεύει προς τα δεξιά.
         this.direction = "left"; 
         this.ballSize = 2;
         this.gap = 1;
         this.balls = [];
         
-        // Ανάθεση επιλογέων για "Αρχική φάση:" και "Διάδοση προς τα:"
         if (this.waveKey === 'blue') {
           this.selectPhase = bluePhaseSelect;
           this.selectDirection = blueDirectionSelect;
@@ -139,7 +214,6 @@
         this.selectPhase.changed(() => this.phase = parseInt(this.selectPhase.value()));
         this.selectDirection.changed(() => this.updateDirection());
         
-        // Αρχική θέση του χεριού (θα ενημερωθεί στη σχεδίαση)
         this.hand = {
           x: (this.direction === "left" ? 50 : width - 50),
           y: this.baseY,
@@ -167,7 +241,6 @@
       }
       
       updateStartTimes(speed) {
-        // Αν η διάδοση είναι "left", ξεκινάμε από το αριστερό άκρο (50); αλλιώς (right) από το δεξί (width-50)
         const startPos = this.direction === 'left' ? 50 : width - 50;
         for (const ball of this.balls) {
           ball.startTime = speed > 0 ? abs(ball.x - startPos) / speed : Infinity;
@@ -176,7 +249,6 @@
       
       updatePositions(simTime) {
         const mode = waveTypeSelect.value();
-        // Εφαρμογή interpolation (lerp) για ομαλή κίνηση των κυμάτων
         for (const ball of this.balls) {
           if (simTime >= ball.startTime) {
             const t = simTime - ball.startTime;
@@ -184,7 +256,7 @@
             if (mode === 'transverse') {
               let targetY = ball.baseY + this.amplitude * sin(phi);
               ball.currentY = lerp(ball.currentY, targetY, 0.1);
-            } else { // longitudinal: οριζόντια κίνηση
+            } else {
               let targetX = ball.x + this.amplitude * sin(phi);
               ball.currentX = lerp(ball.currentX, targetX, 0.1);
             }
@@ -195,11 +267,8 @@
         }
       }
       
-      // Σχεδίαση του κύματος:
-      // Σε transverse mode σχεδιάζονται ως ελλείψεις, ενώ σε longitudinal ως ορθογώνια.
       drawWave() {
         const mode = waveTypeSelect.value();
-        // Αν το κύμα είναι μη ενεργό, χρησιμοποιούμε μειωμένη διαφάνεια για οπτική ένδειξη
         let fillColor = this.color;
         if ((this.waveKey === 'blue' && !blueVisibilityCheckbox.checked()) ||
             (this.waveKey === 'red' && !redVisibilityCheckbox.checked())) {
@@ -207,7 +276,7 @@
         }
         fill(fillColor);
         noStroke();
-        const scaleFactor = 2; // για transverse
+        const scaleFactor = 2;
         if (mode === 'transverse') {
           for (const ball of this.balls) {
             ellipse(ball.x, ball.currentY, this.ballSize * scaleFactor, this.ballSize * scaleFactor);
@@ -220,7 +289,6 @@
         }
       }
       
-      // Σχεδίαση του χεριού σύμφωνα με τις ρυθμίσεις
       drawHand() {
         const mode = waveTypeSelect.value();
         let ball = null;
@@ -232,7 +300,7 @@
               this.hand.y = ball.currentY;
               this.hand.img = handImgLeft;
             }
-          } else { // "right"
+          } else {
             ball = getLastMovingBallFor(this.balls);
             if (ball) {
               this.hand.x = ball.x + 16;
@@ -240,7 +308,7 @@
               this.hand.img = handImgRight;
             }
           }
-        } else { // longitudinal
+        } else {
           if (this.direction === "left") {
             ball = getFirstMovingBallFor(this.balls);
             if (ball) {
@@ -248,7 +316,7 @@
               this.hand.y = ball.baseY;
               this.hand.img = handImgLeft;
             }
-          } else { // "right"
+          } else {
             ball = getLastMovingBallFor(this.balls);
             if (ball) {
               this.hand.x = ball.currentX + 16;
@@ -269,32 +337,16 @@
     }
     
     function setup() {
-      // Δημιουργία container με διάταξη δύο στηλών
-      mainContainer = createDiv();
-      mainContainer.style('display', 'flex');
-      mainContainer.style('flex-direction', 'row');
-      mainContainer.style('width', '100%');
-      mainContainer.style('height', '100vh');
+      // Αναφορές σε DOM στοιχεία
+      globalControls = select('#global-controls');
+      sidebar = select('#sidebar');
+      toggleBtn = select('#toggle-btn');
       
-      // Αριστερή στήλη: Καμβάς + Global controls
-      leftPanel = createDiv();
-      leftPanel.style('flex', '1');
-      leftPanel.style('display', 'flex');
-      leftPanel.style('flex-direction', 'column');
-      leftPanel.style('align-items', 'center');
-      leftPanel.style('justify-content', 'center');
-      leftPanel.parent(mainContainer);
-      
-      // Δημιουργία καμβά με πλάτος 1200 για περισσότερα σημεία
+      // Δημιουργία καμβά και τοποθέτησή του στο container
       let canvas = createCanvas(1200, 400);
-      canvas.parent(leftPanel);
+      canvas.parent(select('.canvas-area'));
       
-      // Global controls κάτω από τον καμβά
-      globalControls = createDiv();
-      globalControls.addClass('global-controls');
-      globalControls.parent(leftPanel);
-      
-      // Global controls: Play/Pause, Reset, Επιλογή τύπου κύματος
+      // Global controls: Play/Pause, Reset, Επιλογή τύπου κύματος, Ταχύτητα, Συμβολή
       playBtn = createButton('▶');
       playBtn.addClass('p5Button');
       playBtn.parent(globalControls);
@@ -319,11 +371,9 @@
       waveTypeSelect.option('Διάμηκες', 'longitudinal');
       waveTypeSelect.parent(globalControls);
       
-      // Checkbox για "Συμβολή:" (πράσινη απεικόνιση)
       greenContributionCheckbox = createCheckbox("Συμβολή:", true);
       greenContributionCheckbox.parent(globalControls);
       
-      // Ετικέτα και slider για "Ταχύτητα κύματος:" (εύρος 0-100)
       let speedLabel = createSpan("Ταχύτητα κύματος:");
       speedLabel.parent(globalControls);
       speedSlider = createSlider(0, 100, 100, 1);
@@ -337,16 +387,10 @@
       speedValue = createSpan('100');
       speedValue.parent(globalControls);
       
-      // Δεξιά στήλη: Controls Panel για τα κύματα
-      rightPanel = createDiv();
-      rightPanel.addClass('right-panel');
-      rightPanel.parent(mainContainer);
-      
-      // Ελέγχοι για το Μπλε κύμα
+      // Sidebar: Ελέγχοι για το Μπλε κύμα
       let blueDiv = createDiv();
       blueDiv.addClass('panel');
-      blueDiv.parent(rightPanel);
-      blueDiv.style('margin-bottom', '15px');
+      blueDiv.parent(sidebar);
       
       let blueTitle = createElement('h3', 'Μπλε Κύμα');
       blueTitle.style('color', '#0066cc');
@@ -401,11 +445,10 @@
       blueDirectionSelect.option('Αριστερά', 'right');
       blueDirectionSelect.parent(blueDirGroup);
       
-      // Ελέγχοι για το Κόκκινο κύμα
+      // Sidebar: Ελέγχοι για το Κόκκινο κύμα
       let redDiv = createDiv();
       redDiv.addClass('panel');
-      redDiv.parent(rightPanel);
-      redDiv.style('margin-bottom', '15px');
+      redDiv.parent(sidebar);
       
       let redTitle = createElement('h3', 'Κόκκινο Κύμα');
       redTitle.style('color', '#cc0000');
@@ -460,11 +503,22 @@
       redDirectionSelect.option('Αριστερά', 'right');
       redDirectionSelect.parent(redDirGroup);
       
-      // Αρχικοποίηση των συστημάτων κυμάτων (μετά το createCanvas ώστε το width να έχει οριστεί)
       blueWave = new WaveSystem(color(0, 100, 200), 100, 'blue');
       redWave = new WaveSystem(color(200, 0, 0), 300, 'red');
       blueWave.initBalls();
       redWave.initBalls();
+      
+      // Toggle sidebar visibility
+      toggleBtn.mousePressed(() => {
+        sidebarVisible = !sidebarVisible;
+        if (sidebarVisible) {
+          sidebar.show();
+          toggleBtn.html('Απόκρυψη Χειριστηρίων');
+        } else {
+          sidebar.hide();
+          toggleBtn.html('Εμφάνιση Χειριστηρίων');
+        }
+      });
     }
     
     function draw() {
@@ -487,11 +541,9 @@
       blueWave.updatePositions(simTime);
       redWave.updatePositions(simTime);
       
-      // Σχεδίαση κυμάτων σύμφωνα με το mode (transverse/longitudinal)
       if (blueVisibilityCheckbox.checked()) blueWave.drawWave();
       if (redVisibilityCheckbox.checked()) redWave.drawWave();
       
-      // Σχεδίαση πράσινης υπέρθεσης (Συμβολή) με βάση τη μέση τιμή θέσης
       if (greenContributionCheckbox.checked()) {
         const mode = waveTypeSelect.value();
         noStroke();
@@ -514,45 +566,8 @@
         }
       }
       
-      // Σχεδίαση των χεριών για κάθε κύμα
       blueWave.drawHand();
       redWave.drawHand();
-      
-      // Σχεδίαση overlay toggle κουμπιού στο πάνω δεξί μέρος του καμβά
-      drawToggleButton();
-    }
-    
-    // Σχεδίαση overlay toggle κουμπιού
-    function drawToggleButton() {
-      let btnX = width - 150;
-      let btnY = 10;
-      let btnW = 140;
-      let btnH = 30;
-      fill(200);
-      stroke(100);
-      rect(btnX, btnY, btnW, btnH, 5);
-      fill(0);
-      noStroke();
-      textAlign(CENTER, CENTER);
-      textSize(12);
-      let btnText = rightPanelVisible ? "Απόκρυψη Χειριστηρίων" : "Εμφάνιση Χειριστηρίων";
-      text(btnText, btnX + btnW / 2, btnY + btnH / 2);
-    }
-    
-    // Εναλλαγή εμφάνισης του δεξιού panel
-    function mousePressed() {
-      let btnX = width - 150;
-      let btnY = 10;
-      let btnW = 140;
-      let btnH = 30;
-      if (mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH) {
-        rightPanelVisible = !rightPanelVisible;
-        if (rightPanelVisible) {
-          rightPanel.show();
-        } else {
-          rightPanel.hide();
-        }
-      }
     }
   </script>
 </body>
