@@ -10,6 +10,7 @@
 </head>
 <body>
   <script>
+    // Global μεταβλητές προσομοίωσης και ελέγχου
     let blueWave, redWave;
     let isPlaying = false;
     let simTime = 0;
@@ -18,28 +19,30 @@
     const greenBaseY = 200;
     let greenVisible = true;
     
+    // Εικόνες χεριών
     let handImgLeft, handImgRight;
     
-    // Containers για τη διάταξη
+    // Containers διάταξης
     let mainContainer, leftPanel, rightPanel;
     let globalControls;
     
-    // Global controls
+    // Global controls (δημιουργούνται μέσω p5.js)
     let playBtn, resetBtn, waveTypeSelect, speedSlider, speedValue;
-    let greenContributionCheckbox; // Checkbox για τη "Συμβολή:"
+    let greenContributionCheckbox; // Checkbox με ετικέτα "Συμβολή:"
     
-    // Blue wave controls
-    let blueVisibilityCheckbox, blueAmplitudeSlider, blueAmplitudeValue, blueFrequencySlider, blueFrequencyValue, bluePhaseSelect, blueDirectionSelect;
+    // Ελέγχοι για το μπλε κύμα
+    let blueVisibilityCheckbox, blueAmplitudeSlider, blueAmplitudeValue;
+    let blueFrequencySlider, blueFrequencyValue, bluePhaseSelect, blueDirectionSelect;
     
-    // Red wave controls
-    let redVisibilityCheckbox, redAmplitudeSlider, redAmplitudeValue, redFrequencySlider, redFrequencyValue, redPhaseSelect, redDirectionSelect;
+    // Ελέγχοι για το κόκκινο κύμα
+    let redVisibilityCheckbox, redAmplitudeSlider, redAmplitudeValue;
+    let redFrequencySlider, redFrequencyValue, redPhaseSelect, redDirectionSelect;
     
     // Κατάσταση εμφάνισης δεξιού panel
     let rightPanelVisible = true;
     
-    // Ορισμός βοηθητικών συναρτήσεων για το "πρώτο κινούμενο σημείο" της υπέρθεσης
+    // Βοηθητικές συναρτήσεις για εύρεση του πρώτου/τελευταίου κινούμενου σημείου της υπέρθεσης
     function getFirstGreenMovingBall() {
-      // Χρησιμοποιούμε το blueWave.balls (οι δύο λίστες έχουν τα ίδια x)
       for (let i = 0; i < blueWave.balls.length; i++) {
         if (simTime >= blueWave.balls[i].startTime) {
           return blueWave.balls[i];
@@ -57,7 +60,7 @@
       return null;
     }
     
-    // Ορισμός της κλάσης WaveSystem (πρέπει να οριστεί πριν τη χρήση της)
+    // Ορισμός της κλάσης WaveSystem (πρέπει να δηλωθεί πριν την πρώτη χρήση)
     class WaveSystem {
       constructor(color, baseY, waveKey) {
         this.waveKey = waveKey;
@@ -67,11 +70,11 @@
         this.frequency = 1;
         this.phase = 0;
         this.direction = 'left';
-        this.ballSize = 2;
+        this.ballSize = 2; // Αρχικό μέγεθος σημείου (θα πολλαπλασιαστεί με zoom)
         this.gap = 1;
         this.balls = [];
         
-        // Ανάθεση των DOM στοιχείων για επιλογές αρχικής φάσης και διάδοσης
+        // Ανάθεση επιλογέων για "Αρχική φάση :" και "Διάδοση προς τα :"
         if (this.waveKey === 'blue') {
           this.selectPhase = bluePhaseSelect;
           this.selectDirection = blueDirectionSelect;
@@ -79,13 +82,12 @@
           this.selectPhase = redPhaseSelect;
           this.selectDirection = redDirectionSelect;
         }
-        
         this.selectPhase.changed(() => this.phase = parseInt(this.selectPhase.value()));
         this.selectDirection.changed(() => this.updateDirection());
         
-        // Αρχική τιμή για το χέρι (θα ανανεώνεται στο draw)
+        // Αρχικοποίηση χεριού (θα ενημερωθεί στο draw)
         this.hand = {
-          x: (this.waveKey === 'blue' ? 50 : width - 50),
+          x: (this.waveKey === 'blue' ? width - 50 : 50),
           y: this.baseY,
           img: (this.waveKey === 'blue' ? handImgLeft : handImgRight)
         };
@@ -93,8 +95,7 @@
       
       updateDirection() {
         this.direction = this.selectDirection.value();
-        // Επιλογή εικόνας βάσει κατεύθυνσης:
-        // Αν η διάδοση είναι προς τα αριστερά, χρησιμοποιούμε το handleft, αλλιώς το handright.
+        // Επιλογή εικόνας: αν διάδοση προς τα αριστερά, χρησιμοποιούμε handImgLeft, αλλιώς handImgRight
         this.hand.img = (this.direction === 'left' ? handImgLeft : handImgRight);
         this.updateStartTimes(speed);
       }
@@ -138,43 +139,43 @@
         }
       }
       
-      drawWave() {
+      // Σχεδίαση του κύματος με εφαρμογή zoom effect
+      drawWave(zoomFactor) {
         const mode = waveTypeSelect.value();
         fill(this.color);
         if (mode === 'transverse') {
           for (const ball of this.balls) {
-            ellipse(ball.x, ball.currentY, this.ballSize, this.ballSize);
+            ellipse(ball.x, ball.currentY, this.ballSize * zoomFactor, this.ballSize * zoomFactor);
           }
         } else {
           rectMode(CENTER);
           for (const ball of this.balls) {
-            rect(ball.currentX, ball.baseY, 2, 60);
+            rect(ball.currentX, ball.baseY, 2 * zoomFactor, 60 * zoomFactor);
           }
         }
       }
       
-      drawHand() {
+      // Σχεδίαση του χεριού: για το μπλε, το πρώτο κινούμενο σημείο της υπέρθεσης θα ευθυγραμμίζεται με το δεξί όριο,
+      // ενώ για το κόκκινο, το τελευταίο κινούμενο σημείο με το αριστερό.
+      drawHand(zoomFactor) {
         let ball = null;
-        // Για το μπλε κύμα (αριστερό χέρι) χρησιμοποιούμε το πρώτο κινούμενο σημείο του μέσου
         if (this.waveKey === 'blue') {
           ball = getFirstGreenMovingBall();
           if (ball) {
-            // Ευθυγράμμιση: το δεξί άκρο του χεριού (half της εικόνας 16px) ευθυγραμμίζεται με το σημείο
-            this.hand.x = ball.x - 16;
+            this.hand.x = width - 50; // δεξί όριο
             this.hand.y = ball.currentY;
           }
         } else {
-          // Για το κόκκινο κύμα (δεξί χέρι) χρησιμοποιούμε το τελευταίο κινούμενο σημείο (το πιο δεξιό)
           ball = getLastGreenMovingBall();
           if (ball) {
-            // Ευθυγράμμιση: το αριστερό άκρο του χεριού ευθυγραμμίζεται με το σημείο
-            this.hand.x = ball.x + 16;
+            this.hand.x = 50; // αριστερό όριο
             this.hand.y = ball.currentY;
           }
         }
         if (!this.hand.img) return;
         imageMode(CENTER);
-        image(this.hand.img, this.hand.x, this.hand.y, 32, 32);
+        // Εφαρμογή zoom στο μέγεθος του χεριού (32x32 ως βάση)
+        image(this.hand.img, this.hand.x, this.hand.y, 32 * zoomFactor, 32 * zoomFactor);
       }
     }
     
@@ -184,7 +185,7 @@
     }
     
     function setup() {
-      // Δημιουργία κύριου container με διάταξη δύο στηλών
+      // Δημιουργία container με διάταξη δύο στηλών
       mainContainer = createDiv();
       mainContainer.style('display', 'flex');
       mainContainer.style('flex-direction', 'row');
@@ -200,7 +201,7 @@
       leftPanel.style('justify-content', 'center');
       leftPanel.parent(mainContainer);
       
-      // Δημιουργία καμβά με αυξημένο πλάτος (1200px)
+      // Δημιουργία καμβά με πλάτος 1200 για περισσότερα σημεία
       let canvas = createCanvas(1200, 400);
       canvas.parent(leftPanel);
       
@@ -216,8 +217,7 @@
       globalControls.style('border-radius', '5px');
       globalControls.parent(leftPanel);
       
-      // Προσθήκη Global controls:
-      // Play/Pause button
+      // Global controls: Play/Pause, Reset, Επιλογή τύπου κύματος
       playBtn = createButton('▶');
       playBtn.parent(globalControls);
       playBtn.mousePressed(() => {
@@ -226,7 +226,6 @@
         lastUpdate = millis();
       });
       
-      // Reset button
       resetBtn = createButton('↻');
       resetBtn.parent(globalControls);
       resetBtn.mousePressed(() => {
@@ -236,17 +235,16 @@
         redWave.initBalls();
       });
       
-      // Επιλογή τύπου κύματος
       waveTypeSelect = createSelect();
       waveTypeSelect.option('Εγκάρσιο', 'transverse');
       waveTypeSelect.option('Διάμηκες', 'longitudinal');
       waveTypeSelect.parent(globalControls);
       
-      // Checkbox για "Συμβολή:" αντί για επιλογέα πράσινου
+      // Checkbox για "Συμβολή:" (πράσινη απεικόνιση)
       greenContributionCheckbox = createCheckbox("Συμβολή:", true);
       greenContributionCheckbox.parent(globalControls);
       
-      // Ετικέτα για ταχύτητα κύματος και slider
+      // Ταχύτητα κύματος: ετικέτα και slider
       let speedLabel = createSpan("Ταχύτητα κύματος :");
       speedLabel.parent(globalControls);
       speedSlider = createSlider(0, 500, 100);
@@ -270,7 +268,7 @@
       rightPanel.style('border-radius', '5px');
       rightPanel.parent(mainContainer);
       
-      // --- Μπλε Κύμα ---
+      // Ελέγχοι για το Μπλε κύμα
       let blueDiv = createDiv();
       blueDiv.parent(rightPanel);
       blueDiv.style('margin-bottom', '15px');
@@ -284,7 +282,6 @@
       blueVisibilityCheckbox = createCheckbox('Εμφάνιση', true);
       blueVisibilityCheckbox.parent(blueDiv);
       
-      // "Πλάτος :" αντί για "Ύψος"
       let blueAmpGroup = createDiv();
       blueAmpGroup.parent(blueDiv);
       let blueAmpLabel = createElement('label', 'Πλάτος :');
@@ -299,7 +296,6 @@
         blueWave.amplitude = val;
       });
       
-      // "Συχνότητα :" με διπλό σημείο
       let blueFreqGroup = createDiv();
       blueFreqGroup.parent(blueDiv);
       let blueFreqLabel = createElement('label', 'Συχνότητα :');
@@ -314,7 +310,6 @@
         blueWave.frequency = val;
       });
       
-      // "Αρχική φάση :" αντί για "Φάση"
       let bluePhaseGroup = createDiv();
       bluePhaseGroup.parent(blueDiv);
       let bluePhaseLabel = createElement('label', 'Αρχική φάση :');
@@ -324,7 +319,6 @@
       bluePhaseSelect.option('180°', '180');
       bluePhaseSelect.parent(bluePhaseGroup);
       
-      // "Διάδοση προς τα :" αντί για "Κατεύθυνση"
       let blueDirGroup = createDiv();
       blueDirGroup.parent(blueDiv);
       let blueDirLabel = createElement('label', 'Διάδοση προς τα :');
@@ -334,7 +328,7 @@
       blueDirectionSelect.option('Δεξιά', 'right');
       blueDirectionSelect.parent(blueDirGroup);
       
-      // --- Κόκκινο Κύμα ---
+      // Ελέγχοι για το Κόκκινο κύμα
       let redDiv = createDiv();
       redDiv.parent(rightPanel);
       redDiv.style('margin-bottom', '15px');
@@ -348,7 +342,6 @@
       redVisibilityCheckbox = createCheckbox('Εμφάνιση', true);
       redVisibilityCheckbox.parent(redDiv);
       
-      // "Πλάτος :" αντί για "Ύψος"
       let redAmpGroup = createDiv();
       redAmpGroup.parent(redDiv);
       let redAmpLabel = createElement('label', 'Πλάτος :');
@@ -363,7 +356,6 @@
         redWave.amplitude = val;
       });
       
-      // "Συχνότητα :" αντί για "Συχνότητα"
       let redFreqGroup = createDiv();
       redFreqGroup.parent(redDiv);
       let redFreqLabel = createElement('label', 'Συχνότητα :');
@@ -378,7 +370,6 @@
         redWave.frequency = val;
       });
       
-      // "Αρχική φάση :" αντί για "Φάση"
       let redPhaseGroup = createDiv();
       redPhaseGroup.parent(redDiv);
       let redPhaseLabel = createElement('label', 'Αρχική φάση :');
@@ -388,7 +379,6 @@
       redPhaseSelect.option('180°', '180');
       redPhaseSelect.parent(redPhaseGroup);
       
-      // "Διάδοση προς τα :" αντί για "Κατεύθυνση"
       let redDirGroup = createDiv();
       redDirGroup.parent(redDiv);
       let redDirLabel = createElement('label', 'Διάδοση προς τα :');
@@ -398,7 +388,7 @@
       redDirectionSelect.option('Δεξιά', 'right');
       redDirectionSelect.parent(redDirGroup);
       
-      // Αρχικοποίηση των συστημάτων κυμάτων (μετά τη δημιουργία του canvas, ώστε το width να είναι ορισμένο)
+      // Αρχικοποίηση των συστημάτων κυμάτων (μετά το createCanvas ώστε το width να είναι ορισμένο)
       blueWave = new WaveSystem(color(0, 100, 200), 100, 'blue');
       redWave = new WaveSystem(color(200, 0, 0), 300, 'red');
       blueWave.initBalls();
@@ -407,6 +397,9 @@
     
     function draw() {
       background(245);
+      
+      // Υπολογισμός zoom effect (διόγκωση) – παράγεται ένας παράγοντας που oscilla μεταξύ 0.8 και 1.2
+      let zoomFactor = map(sin(simTime * 2), -1, 1, 0.8, 1.2);
       
       // Βοηθητικές γραμμές αναφοράς
       stroke(200);
@@ -425,16 +418,21 @@
       blueWave.updatePositions(simTime);
       redWave.updatePositions(simTime);
       
-      // Σχεδίαση κυμάτων βάσει ορατότητας
-      if (blueVisibilityCheckbox.checked()) blueWave.drawWave();
-      if (redVisibilityCheckbox.checked()) redWave.drawWave();
+      // Σχεδίαση κυμάτων με zoom effect
+      if (blueVisibilityCheckbox.checked()) {
+        blueWave.drawWave(zoomFactor);
+      }
+      if (redVisibilityCheckbox.checked()) {
+        redWave.drawWave(zoomFactor);
+      }
       
-      // Σχεδίαση πράσινης υπέρθεσης ("ελαστικού μέσου") με πραγματικό πλάτος ως άθροισμα των ballSize
+      // Σχεδίαση πράσινης υπέρθεσης με εφέ διόγκωσης
       if (greenContributionCheckbox.checked()) {
         const mode = waveTypeSelect.value();
         noStroke();
+        // Χρώμα για την πράσινη υπέρθεση παραμένει πράσινο (0,200,0)
         fill(0, 200, 0);
-        let greenDiameter = blueWave.ballSize + redWave.ballSize;
+        let greenDiameter = (blueWave.ballSize + redWave.ballSize) * zoomFactor;
         for (let i = 0; i < blueWave.balls.length; i++) {
           let combinedPos;
           if (mode === 'transverse') {
@@ -447,16 +445,16 @@
             const xR = redVisibilityCheckbox.checked() ? redWave.balls[i].currentX : redWave.balls[i].x;
             combinedPos = (xB + xR) / 2;
             rectMode(CENTER);
-            rect(combinedPos, greenBaseY, greenDiameter, 60);
+            rect(combinedPos, greenBaseY, greenDiameter, 60 * zoomFactor);
           }
         }
       }
       
-      // Σχεδίαση εικόνων χεριών (τα χέρια κινούνται σύμφωνα με το πρώτο κινούμενο σημείο του μέσου)
-      blueWave.drawHand();
-      redWave.drawHand();
+      // Σχεδίαση των χεριών (με zoom effect)
+      blueWave.drawHand(zoomFactor);
+      redWave.drawHand(zoomFactor);
       
-      // Σχεδίαση p5 overlay toggle κουμπιού στο πάνω δεξί μέρος του καμβά
+      // Σχεδίαση overlay toggle κουμπιού στο πάνω δεξί μέρος του καμβά
       drawToggleButton();
     }
     
@@ -477,7 +475,7 @@
       text(btnText, btnX + btnW / 2, btnY + btnH / 2);
     }
     
-    // Αντίδραση στο κλικ μέσα στην περιοχή του toggle κουμπιού για εναλλαγή εμφάνισης δεξιού panel
+    // Εναλλαγή εμφάνισης του δεξιού panel όταν γίνεται κλικ μέσα στην περιοχή του toggle κουμπιού
     function mousePressed() {
       let btnX = width - 150;
       let btnY = 10;
