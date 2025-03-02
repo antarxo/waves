@@ -138,6 +138,7 @@
       <option value="transverse">Εγκάρσιο</option>
       <option value="διάμηκες">Διάμηκες</option>
     </select>
+    <!-- Επιλογέας ορατότητας υπέρθεσης -->
     <select id="green-visibility" style="width: 100px;">
       <option value="visible">Πράσινο</option>
       <option value="hidden">Κρυφό</option>
@@ -164,7 +165,7 @@
         this.balls = [];
         this.color = color;
         // Για το "Εγκάρσιο" το baseLine είναι η y θέση, για τις "Διάμηκες" χρησιμεύει ως σημείο αναφοράς.
-        this.baseLine = baseLine;
+        this.baseY = baseLine;
         this.amplitude = 20;
         this.frequency = 1;
         this.phase = 0;
@@ -178,7 +179,7 @@
         this.hand = {
           img: handLeft,
           x: this.direction === 'left' ? 50 : width - 50,
-          y: this.baseLine,
+          y: this.baseY,
           firstBall: null
         };
 
@@ -205,9 +206,9 @@
         for (let x = 50; x < width - 50; x += totalSpace) {
           this.balls.push({ 
             x: x,
-            baseY: this.baseLine,
+            baseY: this.baseY,
             startTime: Infinity,
-            currentY: this.baseLine // για "Εγκάρσιο"
+            currentY: this.baseY // για "Εγκάρσιο"
             // Για τις "Διάμηκες" θα υπολογίσουμε την μετατόπιση στο x (ball.currentX)
           });
         }
@@ -260,7 +261,7 @@
             }
           }
           
-          // Σχεδίαση ανάλογα με τον τύπο κύματος
+          // Σχεδίαση κύματος
           if(waveType === 'transverse'){
             // Απεικόνιση όπως στο αρχικό αρχείο με ellipse
             ellipse(ball.x, ball.currentY, this.ballSize, this.ballSize);
@@ -279,6 +280,7 @@
     let simTime = 0;
     let lastUpdate = 0;
     let speed = 100;
+    // Για την υπέρθεση χρησιμοποιούμε μια σταθερή γραμμή, π.χ. στο μέσο μεταξύ των δύο βασικών γραμμών
     const greenBaseY = 200;
     let greenVisible = true;
 
@@ -350,7 +352,7 @@
       background(245);
       stroke(200);
       drawingContext.setLineDash([5, 5]);
-      // Σχεδίαση των γραμμών αναφοράς (η "ευθεία διάδοσης")
+      // Γραμμές αναφοράς (η "ευθεία διάδοσης")
       line(50, blueWave.baseY, width - 50, blueWave.baseY);
       line(50, redWave.baseY, width - 50, redWave.baseY);
       line(50, greenBaseY, width - 50, greenBaseY);
@@ -365,30 +367,32 @@
       blueWave.draw(simTime, speed);
       redWave.draw(simTime, speed);
 
-      // Υπέρθεση ("Πράσινο κύμα") για κάθε τύπο κύματος
-      const waveType = select('#wave-type-select').value();
-      fill(0, 200, 0);
+      // Σχεδίαση της υπέρθεσης ("Πράσινο κύμα")
       if(greenVisible) {
+        const waveType = select('#wave-type-select').value();
+        fill(0, 200, 0);
+        noStroke();
         if(waveType === 'transverse'){
-          // Για εγκάρσιο: πρόσθεση των κάθετων μετατοπίσεων
+          // Για Εγκάρσιο: το πράσινο κύμα ως συνάρτηση των κάθετων μετατοπίσεων
           for(let i = 0; i < blueWave.balls.length; i++) {
             const y = greenBaseY + 
                       (blueWave.balls[i].currentY - blueWave.baseY) + 
                       (redWave.balls[i].currentY - redWave.baseY);
-            ellipse(blueWave.balls[i].x, y, 2, 2);
+            ellipse(blueWave.balls[i].x, y, 4, 4);
           }
         } else if(waveType === 'διάμηκες'){
-          // Για Διάμηκες: πρόσθεση των οριζόντιων μετατοπίσεων
+          // Για Διάμηκες: το πράσινο κύμα ως συνάρτηση των οριζόντιων μετατοπίσεων
           for(let i = 0; i < blueWave.balls.length; i++) {
             const dx = (blueWave.balls[i].currentX - blueWave.balls[i].x) + 
                        (redWave.balls[i].currentX - redWave.balls[i].x);
             const xCombined = blueWave.balls[i].x + dx;
-            ellipse(xCombined, greenBaseY, 2, 2);
+            ellipse(xCombined, greenBaseY, 4, 4);
           }
         }
       }
 
       // Σχεδίαση των "χειρών" ώστε να φαίνεται η κίνησή τους σε κάθε περίπτωση
+      const waveType = select('#wave-type-select').value();
       if(isPlaying) {
         if(waveType === 'transverse'){
           image(blueWave.hand.img, blueWave.hand.x, blueWave.hand.y, 32, 32);
