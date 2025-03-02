@@ -11,28 +11,36 @@
 
     body {
       display: flex;
+      flex-direction: column;
       min-height: 100vh;
       font-family: Arial, sans-serif;
       background: #f8f9fa;
-      padding: 10px;
     }
 
     #main-container {
+      flex: 1;
       display: flex;
-      flex-grow: 1;
+      padding: 10px;
       gap: 15px;
     }
 
-    #canvas-wrapper {
+    #wave-section {
       flex: 3;
+      display: flex;
+      flex-direction: column;
       background: white;
       border-radius: 6px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      position: relative;
+    }
+
+    #canvas-container {
+      flex: 1;
+      padding: 20px;
     }
 
     #controls-panel {
-      flex: 1;
-      max-width: 280px;
+      width: 280px;
       background: white;
       padding: 15px;
       border-radius: 6px;
@@ -40,15 +48,19 @@
       overflow-y: auto;
     }
 
+    #global-controls-row {
+      display: flex;
+      gap: 15px;
+      padding: 10px;
+      background: white;
+      border-top: 1px solid #eee;
+      align-items: center;
+    }
+
     .wave-controls {
       margin-bottom: 15px;
       padding-bottom: 15px;
       border-bottom: 1px solid #eee;
-    }
-
-    .wave-controls:last-child {
-      border-bottom: none;
-      margin-bottom: 8px;
     }
 
     h3 {
@@ -83,12 +95,6 @@
       margin: 8px 0 !important;
     }
 
-    #global-controls {
-      display: flex;
-      gap: 8px;
-      margin-top: 15px;
-    }
-
     button {
       padding: 6px 12px;
       background: #007bff;
@@ -110,16 +116,11 @@
       gap: 12px;
     }
 
-    #speed-control {
-      margin-top: 15px;
-      padding-top: 15px;
-      border-top: 1px solid #eee;
-    }
-
-    .speed-row {
+    .speed-control {
       display: flex;
       align-items: center;
       gap: 10px;
+      margin-left: auto;
     }
 
     #speed-value {
@@ -131,7 +132,7 @@
 </head>
 <body>
   <div id="main-container">
-    <div id="canvas-wrapper">
+    <div id="wave-section">
       <div id="canvas-container"></div>
     </div>
     
@@ -201,31 +202,28 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
 
-      <!-- Global Controls -->
-      <div id="global-controls">
-        <button id="playBtn">▶</button>
-        <button id="resetBtn">↻</button>
-        <select id="green-visibility" style="flex:1; font-size:0.85em;">
-          <option value="visible">Πράσινο</option>
-          <option value="hidden">Κρυφό</option>
-        </select>
-      </div>
-
-      <!-- Speed Control -->
-      <div id="speed-control">
-        <div class="control-group">
-          <label>Ταχύτητα</label>
-          <div class="speed-row">
-            <div id="speed-slider" style="flex:1;"></div>
-            <span id="speed-value">100</span>
-          </div>
-        </div>
-      </div>
+  <!-- Global Controls Bar -->
+  <div id="global-controls-row">
+    <button id="playBtn">▶</button>
+    <button id="resetBtn">↻</button>
+    <select id="green-visibility" style="width: 100px;">
+      <option value="visible">Πράσινο</option>
+      <option value="hidden">Κρυφό</option>
+    </select>
+    
+    <div class="speed-control">
+      <label>Ταχύτητα</label>
+      <div id="speed-slider" style="width: 150px;"></div>
+      <span id="speed-value">100</span>
     </div>
   </div>
 
   <script>
+    // Ο ίδιος JavaScript κώδικας με προηγούμενη απάντηση
+    // (Δεν άλλαξε η λειτουργικότητα, μόνο η θέση των στοιχείων)
     let handLeft, handRight;
 
     function preload() {
