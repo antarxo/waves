@@ -42,13 +42,16 @@
       align-items: center;
       position: relative;
     }
+    /* Δεξί πάνελ με σχετική διάσταση για αποφυγή οριζόντιας κύλισης */
     .sidebar {
       grid-area: sidebar;
       background: rgba(255,255,255,0.95);
       padding: 15px;
       border-left: 1px solid #ddd;
       overflow-y: auto;
-      width: 320px;
+      width: 25%;
+      max-width: 320px;
+      box-sizing: border-box;
     }
     /* Global controls που τοποθετούνται κάτω από τον καμβά */
     .global-controls {
@@ -177,39 +180,6 @@
     }
     .toggle-btn:hover {
       background: #bbb;
-    }
-    /* Responsive control group με σχετικές διαστάσεις */
-    .control-group {
-      display: flex;
-      align-items: center;
-      gap: 5%;
-      width: 100%;
-      margin: 5px 0;
-    }
-    .control-group label {
-      flex: 0 0 30%;
-      min-width: 80px;
-    }
-    .control-group input[type="range"] {
-      flex: 1 1 50%;
-    }
-    .control-group span {
-      flex: 0 0 20%;
-      text-align: right;
-    }
-    /* Σε μικρότερες οθόνες, αναδίπλωση σε δύο σειρές */
-    @media (max-width: 500px) {
-      .control-group {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .control-group label,
-      .control-group input[type="range"],
-      .control-group span {
-        flex: none;
-        width: 100%;
-        text-align: left;
-      }
     }
   </style>
 </head>
@@ -453,8 +423,11 @@
       greenContributionCheckbox = createCheckbox("Συμβολή:", true);
       greenContributionCheckbox.parent(globalControls);
       
-      // Ομαδοποίηση του slider ταχύτητας με σχετικές διαστάσεις (responsive control group)
-      let speedGroup = createDiv().addClass('control-group');
+      // Ομαδοποίηση του slider ταχύτητας με σταθερή διάταξη (χωρίς αλλαγές)
+      let speedGroup = createDiv();
+      speedGroup.style('display', 'flex');
+      speedGroup.style('align-items', 'center');
+      speedGroup.style('gap', '5px');
       speedGroup.parent(globalControls);
       let speedLabel = createSpan("Ταχύτητα κύματος:");
       speedLabel.parent(speedGroup);
@@ -480,7 +453,10 @@
       blueVisibilityCheckbox.parent(blueDiv);
       
       // Έλεγχοι για το πλάτος
-      let blueAmpGroup = createDiv().addClass('control-group');
+      let blueAmpGroup = createDiv();
+      blueAmpGroup.style('display', 'flex');
+      blueAmpGroup.style('align-items', 'center');
+      blueAmpGroup.style('gap', '5px');
       blueAmpGroup.parent(blueDiv);
       let blueAmpLabel = createElement('label', 'Πλάτος:');
       blueAmpLabel.parent(blueAmpGroup);
@@ -494,8 +470,11 @@
         blueWave.amplitude = val;
       });
       
-      // Έλεγχοι για τη συχνότητα με responsive control group
-      let blueFreqGroup = createDiv().addClass('control-group');
+      // Έλεγχοι για τη συχνότητα (χωρίς overflow) στο sidebar
+      let blueFreqGroup = createDiv();
+      blueFreqGroup.style('display', 'flex');
+      blueFreqGroup.style('align-items', 'center');
+      blueFreqGroup.style('gap', '5px');
       blueFreqGroup.parent(blueDiv);
       let blueFreqLabel = createElement('label', 'Συχνότητα:');
       blueFreqLabel.parent(blueFreqGroup);
@@ -548,7 +527,10 @@
       redVisibilityCheckbox.parent(redDiv);
       
       // Έλεγχοι για το πλάτος
-      let redAmpGroup = createDiv().addClass('control-group');
+      let redAmpGroup = createDiv();
+      redAmpGroup.style('display', 'flex');
+      redAmpGroup.style('align-items', 'center');
+      redAmpGroup.style('gap', '5px');
       redAmpGroup.parent(redDiv);
       let redAmpLabel = createElement('label', 'Πλάτος:');
       redAmpLabel.parent(redAmpGroup);
@@ -562,8 +544,11 @@
         redWave.amplitude = val;
       });
       
-      // Έλεγχοι για τη συχνότητα με responsive control group
-      let redFreqGroup = createDiv().addClass('control-group');
+      // Έλεγχοι για τη συχνότητα στο sidebar
+      let redFreqGroup = createDiv();
+      redFreqGroup.style('display', 'flex');
+      redFreqGroup.style('align-items', 'center');
+      redFreqGroup.style('gap', '5px');
       redFreqGroup.parent(redDiv);
       let redFreqLabel = createElement('label', 'Συχνότητα:');
       redFreqLabel.parent(redFreqGroup);
