@@ -33,18 +33,10 @@
     // Red wave controls
     let redVisibilityCheckbox, redAmplitudeSlider, redAmplitudeValue, redFrequencySlider, redFrequencyValue, redPhaseSelect, redDirectionSelect;
     
-    // Κατάσταση εμφάνισης δεξιού panel και παράμετροι για το p5 κουμπί
+    // Κατάσταση εμφάνισης δεξιού panel
     let rightPanelVisible = true;
-    const toggleBtnX =  width - 150; // θα οριστεί στο setup μετά τη δημιουργία του canvas
-    const toggleBtnY = 10;
-    const toggleBtnW = 140;
-    const toggleBtnH = 30;
     
-    function preload(){
-      handImgLeft = loadImage('handleft.png');
-      handImgRight = loadImage('handright.png');
-    }
-    
+    // Ορισμός της κλάσης WaveSystem πριν από την πρώτη χρήση
     class WaveSystem {
       constructor(color, baseY, waveKey) {
         this.waveKey = waveKey;
@@ -70,6 +62,7 @@
         this.selectPhase.changed(() => this.phase = parseInt(this.selectPhase.value()));
         this.selectDirection.changed(() => this.updateDirection());
         
+        // Η χρήση του width γίνεται όταν ο χρήστης δημιουργεί το αντικείμενο (μέσα στο setup μετά το createCanvas)
         this.hand = {
           x: (this.waveKey === 'blue' ? 50 : width - 50),
           y: this.baseY,
@@ -144,6 +137,11 @@
         imageMode(CENTER);
         image(this.hand.img, this.hand.x, this.baseY, 32, 32);
       }
+    }
+    
+    function preload(){
+      handImgLeft = loadImage('handleft.png');
+      handImgRight = loadImage('handright.png');
     }
     
     function setup() {
@@ -365,7 +363,7 @@
       redDirectionSelect.option('Δεξιά', 'right');
       redDirectionSelect.parent(redDirGroup);
       
-      // Αρχικοποίηση των συστημάτων κυμάτων
+      // Αρχικοποίηση των συστημάτων κυμάτων (κατόπιν δημιουργίας του canvas, οπότε το width είναι ορισμένο)
       blueWave = new WaveSystem(color(0, 100, 200), 100, 'blue');
       redWave = new WaveSystem(color(200, 0, 0), 300, 'red');
       blueWave.initBalls();
@@ -384,7 +382,7 @@
       drawingContext.setLineDash([]);
       
       if (isPlaying) {
-        const now = millis();
+        let now = millis();
         simTime += (now - lastUpdate) / 1000;
         lastUpdate = now;
       }
@@ -422,40 +420,39 @@
       blueWave.drawHand();
       redWave.drawHand();
       
-      // Σχεδίαση p5 κουμπιού toggle στο πάνω δεξί μέρος
+      // Σχεδίαση p5 overlay κουμπιού toggle στο πάνω δεξί μέρος του canvas
       drawToggleButton();
     }
     
-    // Σχεδίαση του toggle κουμπιού στο canvas
+    // Σχεδίαση του toggle κουμπιού στο canvas με χρήση p5.js
     function drawToggleButton() {
-      // Ορισμός θέσης και διαστάσεων
       let btnX = width - 150;
       let btnY = 10;
       let btnW = 140;
       let btnH = 30;
       
-      // Σχεδίαση ορθογωνίου με στρογγυλεμένες γωνίες
+      // Σχεδίαση ορθογωνίου κουμπιού με στρογγυλεμένες γωνίες
       fill(200);
       stroke(100);
       rect(btnX, btnY, btnW, btnH, 5);
       
-      // Κείμενο του κουμπιού ανάλογα με την κατάσταση
+      // Εμφάνιση του κειμένου ανάλογα με την κατάσταση
       fill(0);
       noStroke();
       textAlign(CENTER, CENTER);
       textSize(12);
       let btnText = rightPanelVisible ? "Απόκρυψη Χειριστηρίων" : "Εμφάνιση Χειριστηρίων";
-      text(btnText, btnX + btnW/2, btnY + btnH/2);
+      text(btnText, btnX + btnW / 2, btnY + btnH / 2);
     }
     
-    // Χειρισμός κλικ για το toggle κουμπί
+    // Αντίδραση στο κλικ στο canvas: ελέγχει αν έγινε κλικ μέσα στο toggle κουμπί
     function mousePressed() {
       let btnX = width - 150;
       let btnY = 10;
       let btnW = 140;
       let btnH = 30;
-      if(mouseX >= btnX && mouseX <= btnX + btnW &&
-         mouseY >= btnY && mouseY <= btnY + btnH) {
+      if (mouseX >= btnX && mouseX <= btnX + btnW &&
+          mouseY >= btnY && mouseY <= btnY + btnH) {
         rightPanelVisible = !rightPanelVisible;
         if(rightPanelVisible){
           rightPanel.show();
