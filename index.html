@@ -52,6 +52,12 @@
       display: flex; align-items: center; gap: 10px; margin-left: auto;
     }
     #speed-value { font-size: 0.9em; color: #666; min-width: 40px; }
+    /* Στυλ για τα checkboxes δίπλα από τους τίτλους */
+    .wave-controls h3 input[type="checkbox"] {
+      margin-left: 10px;
+      transform: scale(1.2);
+      vertical-align: middle;
+    }
   </style>
 </head>
 <body>
@@ -61,9 +67,12 @@
     </div>
     
     <div id="controls-panel">
-      <!-- Μπλε Κύμα -->
+      <!-- Μπλε Κύμα με checkbox -->
       <div class="wave-controls">
-        <h3 class="blue-title">Μπλε Κύμα</h3>
+        <h3 class="blue-title">
+          Μπλε Κύμα 
+          <input type="checkbox" id="blue-visible" checked>
+        </h3>
         <div class="compact-row">
           <div class="control-group">
             <label>Ύψος</label>
@@ -94,9 +103,12 @@
         </div>
       </div>
 
-      <!-- Κόκκινο Κύμα -->
+      <!-- Κόκκινο Κύμα με checkbox -->
       <div class="wave-controls">
-        <h3 class="red-title">Κόκκινο Κύμα</h3>
+        <h3 class="red-title">
+          Κόκκινο Κύμα 
+          <input type="checkbox" id="red-visible" checked>
+        </h3>
         <div class="compact-row">
           <div class="control-group">
             <label>Ύψος</label>
@@ -164,7 +176,7 @@
         this.waveKey = waveKey;
         this.balls = [];
         this.color = color;
-        // Για το "Εγκάρσιο" το baseLine είναι η y θέση (ονομάζεται baseY)
+        // Για το "Εγκάρσιο" το baseLine είναι η y θέση (baseY)
         this.baseY = baseLine;
         this.amplitude = 20;
         this.frequency = 1;
@@ -262,9 +274,8 @@
           }
           
           // Σχεδίαση κύματος:
-          // Για "Εγκάρσιο": ελλείψεις (ellipse) με το αρχικό χρώμα του κυμάτων.
-          // Για "Διάμηκες": κατακόρυφες μπάρες (rect) με το ίδιο χρώμα.
           if(waveType === 'transverse'){
+            // Ελλείψεις με το αρχικό χρώμα
             ellipse(ball.x, ball.currentY, this.ballSize, this.ballSize);
           } else if(waveType === 'διάμηκες'){
             rectMode(CENTER);
@@ -351,7 +362,7 @@
       background(245);
       stroke(200);
       drawingContext.setLineDash([5, 5]);
-      // Σχεδίαση γραμμών αναφοράς (η "ευθεία διάδοσης")
+      // Γραμμές αναφοράς (η "ευθεία διάδοσης")
       line(50, blueWave.baseY, width - 50, blueWave.baseY);
       line(50, redWave.baseY, width - 50, redWave.baseY);
       line(50, greenBaseY, width - 50, greenBaseY);
@@ -363,36 +374,47 @@
         lastUpdate = now;
       }
 
-      blueWave.draw(simTime, speed);
-      redWave.draw(simTime, speed);
+      // Έλεγχος ορατότητας για κάθε κύμα
+      const blueWaveVisible = document.getElementById("blue-visible").checked;
+      const redWaveVisible = document.getElementById("red-visible").checked;
+      const waveType = select('#wave-type-select').value;
 
-      // Σχεδίαση της υπέρθεσης (overlay) – πάντα πράσινη
+      if(blueWaveVisible) blueWave.draw(simTime, speed);
+      if(redWaveVisible) redWave.draw(simTime, speed);
+
+      // Υπέρθεση (overlay) – πάντα πράσινη
       if(greenVisible) {
-        const waveType = select('#wave-type-select').value();
         noStroke();
         fill(0, 200, 0);
         if(waveType === 'transverse'){
-          // Υπολογισμός της μέσης κάθετης μετατόπισης από τα δύο κύματα
+          // Υπέρθεση: υπολογισμός μέσης κάθετης μετατόπισης μόνο για ορατά κύματα
           for(let i = 0; i < blueWave.balls.length; i++){
-            const dyBlue = blueWave.balls[i].currentY - blueWave.balls[i].baseY;
-            const dyRed = redWave.balls[i].currentY - redWave.balls[i].baseY;
-            const yOverlay = greenBaseY + (dyBlue + dyRed) / 2;
-            ellipse(blueWave.balls[i].x, yOverlay, 4, 4);
+            let dyBlue = blueWaveVisible ? (blueWave.balls[i].currentY - blueWave.balls[i].baseY) : 0;
+            let dyRed = redWaveVisible ? (redWave.balls[i].currentY - redWave.balls[i].baseY) : 0;
+            let count = (blueWaveVisible ? 1 : 0) + (redWaveVisible ? 1 : 0);
+            if(count > 0) {
+              let avgDy = (dyBlue + dyRed) / count;
+              let yOverlay = greenBaseY + avgDy;
+              ellipse(blueWave.balls[i].x, yOverlay, 4, 4);
+            }
           }
         } else if(waveType === 'διάμηκες'){
-          // Υπολογισμός της μέσης οριζόντιας μετατόπισης από τα δύο κύματα
+          // Υπέρθεση: υπολογισμός μέσης οριζόντιας μετατόπισης μόνο για ορατά κύματα
           rectMode(CENTER);
           for(let i = 0; i < blueWave.balls.length; i++){
-            const dxBlue = blueWave.balls[i].currentX - blueWave.balls[i].x;
-            const dxRed = redWave.balls[i].currentX - redWave.balls[i].x;
-            const xOverlay = blueWave.balls[i].x + (dxBlue + dxRed) / 2;
-            rect(xOverlay, greenBaseY, 2, 60);
+            let dxBlue = blueWaveVisible ? (blueWave.balls[i].currentX - blueWave.balls[i].x) : 0;
+            let dxRed = redWaveVisible ? (redWave.balls[i].currentX - redWave.balls[i].x) : 0;
+            let count = (blueWaveVisible ? 1 : 0) + (redWaveVisible ? 1 : 0);
+            if(count > 0) {
+              let avgDx = (dxBlue + dxRed) / count;
+              let xOverlay = blueWave.balls[i].x + avgDx;
+              rect(xOverlay, greenBaseY, 2, 60);
+            }
           }
         }
       }
 
       // Σχεδίαση των "χειρών" ώστε να φαίνεται η κίνησή τους
-      const waveType = select('#wave-type-select').value();
       if(isPlaying) {
         if(waveType === 'transverse'){
           image(blueWave.hand.img, blueWave.hand.x, blueWave.hand.y, 32, 32);
