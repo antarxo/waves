@@ -194,7 +194,7 @@
     <!-- Επιλογέας τύπου απεικόνισης κύματος -->
     <select id="wave-type-select" style="width: 150px;">
       <option value="transverse">Εγκάρσιο</option>
-      <option value="longitudinal">Διαμήκιο</option>
+      <option value="διάμηκες">Διάμηκες</option>
     </select>
     <select id="green-visibility" style="width: 100px;">
       <option value="visible">Πράσινο</option>
@@ -221,13 +221,13 @@
         this.waveKey = waveKey;
         this.balls = [];
         this.color = color;
-        // Για εγκάρσιο κύμα το baseLine είναι η y θέση, για διαμήκιο το baseLine παραμένει ως σημείο αναφοράς (στην οριζόντια διάδοση)
+        // Για το "Εγκάρσιο" το baseLine είναι η y θέση, για τις "Διάμηκες" χρησιμοποιούμε το baseLine ως σημείο αναφοράς
         this.baseLine = baseLine;
         this.amplitude = 20;
         this.frequency = 1;
         this.phase = 0;
         this.direction = 'left';
-        // Μέγεθος για απεικόνιση (όπως στην αρχική υλοποίηση)
+        // Αρχικό μέγεθος για απεικόνιση (όπως στην αρχική υλοποίηση)
         this.ballSize = 2;
         this.gap = 1;
         
@@ -266,8 +266,8 @@
             x: x,
             baseY: this.baseLine,
             startTime: Infinity,
-            currentY: this.baseLine // για εγκάρσιο κύμα
-            // Για διαμήκιο θα υπολογίσουμε την μετατόπιση στο x (ball.currentX)
+            currentY: this.baseLine // για το "Εγκάρσιο"
+            // Για τις "Διάμηκες" θα υπολογίσουμε την μετατόπιση στο x (ball.currentX)
           });
         }
         this.updateFirstBall();
@@ -294,7 +294,7 @@
         // Ενημέρωση θέσης του "χεριού" ανάλογα με τον τύπο κύματος
         if(waveType === 'transverse'){
           if(this.hand.firstBall) this.hand.y = this.hand.firstBall.currentY;
-        } else if(waveType === 'longitudinal'){
+        } else if(waveType === 'διάμηκες'){
           if(this.hand.firstBall) {
             const t = simTime - this.hand.firstBall.startTime;
             const phase = radians(this.phase) + TWO_PI * this.frequency * t;
@@ -308,7 +308,7 @@
             const phase = radians(this.phase) + TWO_PI * this.frequency * t;
             if(waveType === 'transverse'){
               ball.currentY = ball.baseY + this.amplitude * sin(phase);
-            } else if(waveType === 'longitudinal'){
+            } else if(waveType === 'διάμηκες'){
               ball.currentX = ball.x + this.amplitude * sin(phase);
             }
           } else {
@@ -321,10 +321,10 @@
           
           // Σχεδίαση ανάλογα με τον τύπο κύματος
           if(waveType === 'transverse'){
-            // Όπως στο αρχικό αρχείο: μικρή "μπάλα" (ellipse)
+            // Όπως στο αρχικό αρχείο: απεικόνιση με ellipse
             ellipse(ball.x, ball.currentY, this.ballSize, this.ballSize);
-          } else if(waveType === 'longitudinal'){
-            // Μπάρα κατακόρυφη (rect) με πλάτος 2px και ύψος 60px,
+          } else if(waveType === 'διάμηκες'){
+            // Κατακόρυφη μπάρα (rect) με πλάτος 2px και ύψος 60px,
             // με το κέντρο της πάνω στην ευθεία διάδοσης (ball.baseY)
             rectMode(CENTER);
             rect(ball.currentX, ball.baseY, 2, 60);
@@ -435,13 +435,13 @@
         }
       }
 
-      // Σχεδίαση των "χειρών"
+      // Σχεδίαση των "χειρών" ώστε να φαίνεται η κίνησή τους σε κάθε περίπτωση
       const waveType = select('#wave-type-select').value();
       if(isPlaying) {
         if(waveType === 'transverse'){
           image(blueWave.hand.img, blueWave.hand.x, blueWave.hand.y, 32, 32);
           image(redWave.hand.img, redWave.hand.x, redWave.hand.y, 32, 32);
-        } else if(waveType === 'longitudinal'){
+        } else if(waveType === 'διάμηκες'){
           image(blueWave.hand.img, blueWave.hand.x, blueWave.baseY, 32, 32);
           image(redWave.hand.img, redWave.hand.x, redWave.baseY, 32, 32);
         }
