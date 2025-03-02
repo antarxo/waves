@@ -64,7 +64,7 @@
         this.amplitude = 20;
         this.frequency = 1;
         this.phase = 0;
-        // Default: για κάθε κύμα, "Δεξιά" με τιμή "left" σημαίνει ότι το κύμα ξεκινά από το αριστερό άκρο και προοδεύει προς τα δεξιά.
+        // Default: "Δεξιά" με τιμή "left" σημαίνει ότι το κύμα ξεκινά από το αριστερό άκρο και προοδεύει προς τα δεξιά.
         this.direction = "left"; 
         this.ballSize = 2;
         this.gap = 1;
@@ -109,6 +109,8 @@
       }
       
       updateStartTimes(speed) {
+        // Αν η διάδοση είναι "left" (Δεξιά): ξεκινάμε από το αριστερό άκρο (50)
+        // Αν είναι "right": ξεκινούμε από το δεξί άκρο (width-50)
         const startPos = this.direction === 'left' ? 50 : width - 50;
         for (const ball of this.balls) {
           ball.startTime = speed > 0 ? abs(ball.x - startPos) / speed : Infinity;
@@ -123,7 +125,7 @@
             const phi = radians(this.phase) + TWO_PI * this.frequency * t;
             if (mode === 'transverse') {
               ball.currentY = ball.baseY + this.amplitude * sin(phi);
-            } else {
+            } else { // longitudinal: κίνηση οριζόντια
               ball.currentX = ball.x + this.amplitude * sin(phi);
             }
           } else {
@@ -133,7 +135,8 @@
         }
       }
       
-      // Σχεδίαση του κύματος: κάθε σημείο σχεδιάζεται με μέγεθος = ballSize * 2 (για τα μπλε και κόκκινα)
+      // Σχεδίαση του κύματος: για τα μπλε και κόκκινα, το μέγεθος κάθε σημείου είναι ballSize*2 (δηλαδή, 4px αν ballSize=2)
+      // Στη λειτουργία των διάμηκων, σχεδιάζουμε ορθογώνια με width = ballSize*2 και ύψος = 60px.
       drawWave() {
         const mode = waveTypeSelect.value();
         fill(this.color);
@@ -145,30 +148,51 @@
         } else {
           rectMode(CENTER);
           for (const ball of this.balls) {
-            rect(ball.currentX, ball.baseY, 2 * scaleFactor, 60 * scaleFactor);
+            rect(ball.currentX, ball.baseY, this.ballSize * scaleFactor, 60);
           }
         }
       }
       
       // Σχεδίαση του χεριού σύμφωνα με τις ρυθμίσεις:
-      // Για το "Δεξιά" (τιμή "left"): χρησιμοποιείται το handImgLeft και το πρώτο κινούμενο σημείο ορίζεται ώστε (hand.x + 16) = ball.x, δηλαδή hand.x = ball.x - 16.
-      // Για το "Αριστερά" (τιμή "right"): χρησιμοποιείται το handImgRight και το τελευταίο κινούμενο σημείο ορίζεται ώστε (hand.x - 16) = ball.x, δηλαδή hand.x = ball.x + 16.
-      // Σε κάθε περίπτωση εμφανίζεται μόνο το χέρι που αντιστοιχεί στη ρύθμιση.
+      // Σε "transverse" λειτουργία:
+      //   - Αν this.direction === "left": χρησιμοποιείται το handImgLeft και το πρώτο κινούμενο σημείο, με θέση: hand.x = ball.x - 16, hand.y = ball.currentY.
+      // Σε "longitudinal" λειτουργία:
+      //   - Αν this.direction === "left": το χέρι (handImgLeft) εμφανίζεται στο πρώτο κινούμενο σημείο (με βάση το currentX), με θέση: hand.x = ball.currentX - 16, hand.y = ball.baseY.
+      // Αν this.direction === "right", αντίστοιχα χρησιμοποιούνται getLastMovingBallFor και οι θέσεις ορίζονται με offset +16.
       drawHand() {
+        const mode = waveTypeSelect.value();
         let ball = null;
-        if (this.direction === "left") {
-          ball = getFirstMovingBallFor(this.balls);
-          if (ball) {
-            this.hand.x = ball.x - 16;
-            this.hand.y = ball.currentY;
-            this.hand.img = handImgLeft;
+        if (mode === 'transverse') {
+          if (this.direction === "left") {
+            ball = getFirstMovingBallFor(this.balls);
+            if (ball) {
+              this.hand.x = ball.x - 16;
+              this.hand.y = ball.currentY;
+              this.hand.img = handImgLeft;
+            }
+          } else { // "right"
+            ball = getLastMovingBallFor(this.balls);
+            if (ball) {
+              this.hand.x = ball.x + 16;
+              this.hand.y = ball.currentY;
+              this.hand.img = handImgRight;
+            }
           }
-        } else { // this.direction === "right"
-          ball = getLastMovingBallFor(this.balls);
-          if (ball) {
-            this.hand.x = ball.x + 16;
-            this.hand.y = ball.currentY;
-            this.hand.img = handImgRight;
+        } else { // longitudinal
+          if (this.direction === "left") {
+            ball = getFirstMovingBallFor(this.balls);  // χρησιμοποιούμε το currentX
+            if (ball) {
+              this.hand.x = ball.currentX - 16;
+              this.hand.y = ball.baseY;
+              this.hand.img = handImgLeft;
+            }
+          } else { // "right"
+            ball = getLastMovingBallFor(this.balls);
+            if (ball) {
+              this.hand.x = ball.currentX + 16;
+              this.hand.y = ball.baseY;
+              this.hand.img = handImgRight;
+            }
           }
         }
         if (!this.hand.img) return;
@@ -322,7 +346,7 @@
       let blueDirLabel = createElement('label', 'Διάδοση προς τα :');
       blueDirLabel.parent(blueDirGroup);
       blueDirectionSelect = createSelect();
-      // Default για το μπλε: "Δεξιά" με τιμή "left"
+      // Default για το μπλε: "Δεξιά" με τιμή "left" (δηλαδή, ξεκινά από το αριστερό άκρο και προοδεύει προς τα δεξιά)
       blueDirectionSelect.option('Δεξιά', 'left');
       blueDirectionSelect.option('Αριστερά', 'right');
       blueDirectionSelect.parent(blueDirGroup);
@@ -383,7 +407,7 @@
       let redDirLabel = createElement('label', 'Διάδοση προς τα :');
       redDirLabel.parent(redDirGroup);
       redDirectionSelect = createSelect();
-      // Για το κόκκινο, default "Δεξιά" με τιμή "left" ώστε να ξεκινά από το αριστερότερο σημείο
+      // Για το κόκκινο κύμα, default "Δεξιά" με τιμή "left" ώστε να ξεκινά από το αριστερότερο σημείο
       redDirectionSelect.option('Δεξιά', 'left');
       redDirectionSelect.option('Αριστερά', 'right');
       redDirectionSelect.parent(redDirGroup);
@@ -419,7 +443,7 @@
       if (blueVisibilityCheckbox.checked()) blueWave.drawWave();
       if (redVisibilityCheckbox.checked()) redWave.drawWave();
       
-      // Σχεδίαση πράσινης υπέρθεσης με scaleFactor 2
+      // Σχεδίαση πράσινης υπέρθεσης με scaleFactor 2 (χωρίς αλλαγή στο πλάτος)
       if (greenContributionCheckbox.checked()) {
         const mode = waveTypeSelect.value();
         noStroke();
@@ -442,7 +466,7 @@
         }
       }
       
-      // Σχεδίαση των χεριών για κάθε κύμα, σύμφωνα με τις ρυθμίσεις
+      // Σχεδίαση των χεριών για κάθε κύμα, σύμφωνα με τις ρυθμίσεις και τον mode
       blueWave.drawHand();
       redWave.drawHand();
       
