@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Κύματα - Toggle Δεξιά Χειριστήρια</title>
+  <title>Κύματα - Toggle Δεξιά Χειριστήρια (p5 Button)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
     body, html { margin: 0; padding: 0; overflow: hidden; }
@@ -33,8 +33,12 @@
     // Red wave controls
     let redVisibilityCheckbox, redAmplitudeSlider, redAmplitudeValue, redFrequencySlider, redFrequencyValue, redPhaseSelect, redDirectionSelect;
     
-    // Κουμπί για toggle δεξιά χειριστήρια
-    let toggleRightPanelButton;
+    // Κατάσταση εμφάνισης δεξιού panel και παράμετροι για το p5 κουμπί
+    let rightPanelVisible = true;
+    const toggleBtnX =  width - 150; // θα οριστεί στο setup μετά τη δημιουργία του canvas
+    const toggleBtnY = 10;
+    const toggleBtnW = 140;
+    const toggleBtnH = 30;
     
     function preload(){
       handImgLeft = loadImage('handleft.png');
@@ -163,7 +167,7 @@
       let canvas = createCanvas(800, 400);
       canvas.parent(leftPanel);
       
-      // Δημιουργία Global controls κάτω από το canvas
+      // Global controls κάτω από το canvas
       globalControls = createDiv();
       globalControls.style('margin-top', '10px');
       globalControls.style('width', '800px');
@@ -175,7 +179,7 @@
       globalControls.style('border-radius', '5px');
       globalControls.parent(leftPanel);
       
-      // Δημιουργία δεξιάς στήλης: Controls Panel
+      // Δεξιά στήλη: Controls Panel
       rightPanel = createDiv();
       rightPanel.style('width', '300px');
       rightPanel.style('padding', '10px');
@@ -185,14 +189,7 @@
       rightPanel.style('border-radius', '5px');
       rightPanel.parent(mainContainer);
       
-      // Κουμπί toggle για τα δεξιά χειριστήρια (τοποθετούμε το πάνω δεξιά της οθόνης)
-      toggleRightPanelButton = createButton('Απόκρυψη Χειριστηρίων');
-      toggleRightPanelButton.style('position', 'absolute');
-      toggleRightPanelButton.style('top', '10px');
-      toggleRightPanelButton.style('right', '10px');
-      toggleRightPanelButton.mousePressed(toggleRightPanel);
-      
-      // Global controls μέσα στο globalControls container
+      // Δημιουργία Global controls
       
       // Play/Pause button
       playBtn = createButton('▶');
@@ -377,6 +374,7 @@
     
     function draw() {
       background(245);
+      
       // Βοηθητικές γραμμές αναφοράς
       stroke(200);
       drawingContext.setLineDash([5, 5]);
@@ -423,16 +421,47 @@
       // Σχεδίαση εικόνων χεριών
       blueWave.drawHand();
       redWave.drawHand();
+      
+      // Σχεδίαση p5 κουμπιού toggle στο πάνω δεξί μέρος
+      drawToggleButton();
     }
     
-    // Συνάρτηση για το toggle του δεξιού panel
-    function toggleRightPanel() {
-      if (rightPanel.style('display') === 'none') {
-        rightPanel.show();
-        toggleRightPanelButton.html('Απόκρυψη Χειριστηρίων');
-      } else {
-        rightPanel.hide();
-        toggleRightPanelButton.html('Εμφάνιση Χειριστηρίων');
+    // Σχεδίαση του toggle κουμπιού στο canvas
+    function drawToggleButton() {
+      // Ορισμός θέσης και διαστάσεων
+      let btnX = width - 150;
+      let btnY = 10;
+      let btnW = 140;
+      let btnH = 30;
+      
+      // Σχεδίαση ορθογωνίου με στρογγυλεμένες γωνίες
+      fill(200);
+      stroke(100);
+      rect(btnX, btnY, btnW, btnH, 5);
+      
+      // Κείμενο του κουμπιού ανάλογα με την κατάσταση
+      fill(0);
+      noStroke();
+      textAlign(CENTER, CENTER);
+      textSize(12);
+      let btnText = rightPanelVisible ? "Απόκρυψη Χειριστηρίων" : "Εμφάνιση Χειριστηρίων";
+      text(btnText, btnX + btnW/2, btnY + btnH/2);
+    }
+    
+    // Χειρισμός κλικ για το toggle κουμπί
+    function mousePressed() {
+      let btnX = width - 150;
+      let btnY = 10;
+      let btnW = 140;
+      let btnH = 30;
+      if(mouseX >= btnX && mouseX <= btnX + btnW &&
+         mouseY >= btnY && mouseY <= btnY + btnH) {
+        rightPanelVisible = !rightPanelVisible;
+        if(rightPanelVisible){
+          rightPanel.show();
+        } else {
+          rightPanel.hide();
+        }
       }
     }
   </script>
