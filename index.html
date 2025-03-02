@@ -221,7 +221,7 @@
         this.waveKey = waveKey;
         this.balls = [];
         this.color = color;
-        // Για εγκάρσιο κύμα το baseLine είναι η y θέση, για διαμήκιο παραμένει η x θέση ως σημείο αναφοράς
+        // Για εγκάρσιο κύμα το baseLine είναι η y θέση, για διαμήκιο το baseLine παραμένει ως σημείο αναφοράς (στην οριζόντια διάδοση)
         this.baseLine = baseLine;
         this.amplitude = 20;
         this.frequency = 1;
@@ -262,7 +262,6 @@
       initBalls() {
         const totalSpace = this.ballSize + this.gap;
         for (let x = 50; x < width - 50; x += totalSpace) {
-          // Αρχικά αποθηκεύουμε μόνο τις βασικές τιμές;
           this.balls.push({ 
             x: x,
             baseY: this.baseLine,
@@ -325,9 +324,10 @@
             // Όπως στο αρχικό αρχείο: μικρή "μπάλα" (ellipse)
             ellipse(ball.x, ball.currentY, this.ballSize, this.ballSize);
           } else if(waveType === 'longitudinal'){
-            // Μπάρα οριζόντια (rect) με πλάτος 60px και ύψος 2px
+            // Μπάρα κατακόρυφη (rect) με πλάτος 2px και ύψος 60px,
+            // με το κέντρο της πάνω στην ευθεία διάδοσης (ball.baseY)
             rectMode(CENTER);
-            rect(ball.currentX, ball.baseY, 60, 2);
+            rect(ball.currentX, ball.baseY, 2, 60);
           }
         });
       }
