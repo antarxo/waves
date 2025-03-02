@@ -42,15 +42,15 @@
       align-items: center;
       position: relative;
     }
-    /* Δεξί πάνελ με σχετική διάσταση */
+    /* Δεξί πάνελ (sidebar) με μειωμένη γραμματοσειρά */
     .sidebar {
       grid-area: sidebar;
       background: rgba(255,255,255,0.95);
       padding: 15px;
       border-left: 1px solid #ddd;
       overflow-y: auto;
-      width: 25%;
-      max-width: 320px;
+      width: 320px;
+      font-size: 14px;
       box-sizing: border-box;
     }
     /* Global controls που τοποθετούνται κάτω από τον καμβά */
@@ -385,7 +385,7 @@
       sidebar = select('#sidebar');
       toggleBtn = select('#toggle-btn');
       
-      // Δημιουργία καμβά με πλάτος 1100 αντί για 1200 για να υπάρχει περισσότερος χώρος για το sidebar
+      // Δημιουργία καμβά με πλάτος 1100 αντί για 1200 για επιπλέον χώρο στο δεξί πάνελ
       let canvas = createCanvas(1100, 400);
       canvas.parent(select('.canvas-area'));
       
