@@ -118,7 +118,7 @@
       cursor: pointer;
       margin-right: 5px;
     }
-    /* Styling για το toggle switch του wave type και για τους νέους toggle */
+    /* Styling για τα toggle switches και τα control groups */
     .toggle-container, .toggle-group {
       display: flex;
       align-items: center;
@@ -178,6 +178,39 @@
     .toggle-btn:hover {
       background: #bbb;
     }
+    /* Responsive control group με σχετικές διαστάσεις */
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 5%;
+      width: 100%;
+      margin: 5px 0;
+    }
+    .control-group label {
+      flex: 0 0 30%;
+      min-width: 80px;
+    }
+    .control-group input[type="range"] {
+      flex: 1 1 50%;
+    }
+    .control-group span {
+      flex: 0 0 20%;
+      text-align: right;
+    }
+    /* Σε μικρότερες οθόνες, αναδίπλωση σε δύο σειρές */
+    @media (max-width: 500px) {
+      .control-group {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .control-group label,
+      .control-group input[type="range"],
+      .control-group span {
+        flex: none;
+        width: 100%;
+        text-align: left;
+      }
+    }
   </style>
 </head>
 <body>
@@ -212,23 +245,23 @@
     let playBtn, resetBtn, speedSlider, speedValue;
     let greenContributionCheckbox;
     
-    // Νέος toggle για τον τύπο κύματος (αντί για select)
+    // Toggle για τον τύπο κύματος (Εγκάρσιο/Διάμηκες)
     let waveTypeToggle, waveTypeLabel;
     
     // Ελέγχοι για το Μπλε κύμα
     let blueVisibilityCheckbox, blueAmplitudeSlider, blueAmplitudeValue;
     let blueFrequencySlider, blueFrequencyValue;
-    // Θα χρησιμοποιηθούν τώρα toggle για "Αρχική φάση" και "Διάδοση προς τα"
+    // Θα χρησιμοποιηθούν πλέον toggles για "Αρχική φάση" και "Διάδοση προς τα"
     
     // Ελέγχοι για το Κόκκινο κύμα
     let redVisibilityCheckbox, redAmplitudeSlider, redAmplitudeValue;
     let redFrequencySlider, redFrequencyValue;
-    // Toggle για "Αρχική φάση" και "Διάδοση προς τα"
+    // Toggles για "Αρχική φάση" και "Διάδοση προς τα"
     
     // Κατάσταση εμφάνισης του sidebar
     let sidebarVisible = true;
     
-    // Βοηθητική συνάρτηση για τον τύπο κύματος με το νέο toggle
+    // Βοηθητική συνάρτηση για τον τύπο κύματος με το toggle
     function getWaveMode() {
       return waveTypeToggle.checked() ? 'transverse' : 'longitudinal';
     }
@@ -420,24 +453,21 @@
       greenContributionCheckbox = createCheckbox("Συμβολή:", true);
       greenContributionCheckbox.parent(globalControls);
       
-      // Ομαδοποίηση του slider ταχύτητας με label και τιμή
-      let speedGroup = createDiv();
-      speedGroup.style('display', 'flex');
-      speedGroup.style('align-items', 'center');
-      speedGroup.style('gap', '5px');
+      // Ομαδοποίηση του slider ταχύτητας με σχετικές διαστάσεις (responsive control group)
+      let speedGroup = createDiv().addClass('control-group');
       speedGroup.parent(globalControls);
       let speedLabel = createSpan("Ταχύτητα κύματος:");
       speedLabel.parent(speedGroup);
       speedSlider = createSlider(0, 100, 100, 1);
       speedSlider.parent(speedGroup);
+      speedValue = createSpan('100');
+      speedValue.parent(speedGroup);
       speedSlider.input(() => {
         speed = speedSlider.value();
         speedValue.html(speed);
         blueWave.updateStartTimes(speed);
         redWave.updateStartTimes(speed);
       });
-      speedValue = createSpan('100');
-      speedValue.parent(speedGroup);
       
       // Sidebar: Ελέγχοι για το Μπλε κύμα
       let blueDiv = createDiv();
@@ -450,7 +480,7 @@
       blueVisibilityCheckbox.parent(blueDiv);
       
       // Έλεγχοι για το πλάτος
-      let blueAmpGroup = createDiv();
+      let blueAmpGroup = createDiv().addClass('control-group');
       blueAmpGroup.parent(blueDiv);
       let blueAmpLabel = createElement('label', 'Πλάτος:');
       blueAmpLabel.parent(blueAmpGroup);
@@ -464,19 +494,13 @@
         blueWave.amplitude = val;
       });
       
-      // Έλεγχοι για τη συχνότητα με container ώστε να μην ξεφεύγει
-      let blueFreqGroup = createDiv();
-      blueFreqGroup.style('display', 'flex');
-      blueFreqGroup.style('align-items', 'center');
-      blueFreqGroup.style('gap', '5px');
-      blueFreqGroup.style('max-width', '150px');
-      blueFreqGroup.style('overflow', 'hidden');
+      // Έλεγχοι για τη συχνότητα με responsive control group
+      let blueFreqGroup = createDiv().addClass('control-group');
       blueFreqGroup.parent(blueDiv);
       let blueFreqLabel = createElement('label', 'Συχνότητα:');
       blueFreqLabel.parent(blueFreqGroup);
       blueFrequencySlider = createSlider(0, 2.5, 1, 0.1);
       blueFrequencySlider.parent(blueFreqGroup);
-      blueFrequencySlider.style('width', '80px');
       blueFrequencyValue = createSpan('1');
       blueFrequencyValue.parent(blueFreqGroup);
       blueFrequencySlider.input(() => {
@@ -485,9 +509,8 @@
         blueWave.frequency = val;
       });
       
-      // Νέος toggle για "Αρχική φάση" για το Μπλε κύμα
-      let bluePhaseGroup = createDiv();
-      bluePhaseGroup.addClass('toggle-group');
+      // Toggle για "Αρχική φάση" για το Μπλε κύμα
+      let bluePhaseGroup = createDiv().addClass('toggle-group');
       bluePhaseGroup.parent(blueDiv);
       let bluePhaseToggle = createCheckbox("", false);
       let bluePhaseLabel = createSpan("Αρχική φάση: 0°");
@@ -499,9 +522,8 @@
       bluePhaseToggle.parent(bluePhaseGroup);
       bluePhaseLabel.parent(bluePhaseGroup);
       
-      // Νέος toggle για "Διάδοση προς τα" για το Μπλε κύμα
-      let blueDirGroup = createDiv();
-      blueDirGroup.addClass('toggle-group');
+      // Toggle για "Διάδοση προς τα" για το Μπλε κύμα
+      let blueDirGroup = createDiv().addClass('toggle-group');
       blueDirGroup.parent(blueDiv);
       let blueDirectionToggle = createCheckbox("", false);
       let blueDirectionLabel = createSpan("Διάδοση προς τα: Δεξιά");
@@ -526,7 +548,7 @@
       redVisibilityCheckbox.parent(redDiv);
       
       // Έλεγχοι για το πλάτος
-      let redAmpGroup = createDiv();
+      let redAmpGroup = createDiv().addClass('control-group');
       redAmpGroup.parent(redDiv);
       let redAmpLabel = createElement('label', 'Πλάτος:');
       redAmpLabel.parent(redAmpGroup);
@@ -540,19 +562,13 @@
         redWave.amplitude = val;
       });
       
-      // Έλεγχοι για τη συχνότητα με container ώστε να μην ξεφεύγει
-      let redFreqGroup = createDiv();
-      redFreqGroup.style('display', 'flex');
-      redFreqGroup.style('align-items', 'center');
-      redFreqGroup.style('gap', '5px');
-      redFreqGroup.style('max-width', '150px');
-      redFreqGroup.style('overflow', 'hidden');
+      // Έλεγχοι για τη συχνότητα με responsive control group
+      let redFreqGroup = createDiv().addClass('control-group');
       redFreqGroup.parent(redDiv);
       let redFreqLabel = createElement('label', 'Συχνότητα:');
       redFreqLabel.parent(redFreqGroup);
       redFrequencySlider = createSlider(0, 2.5, 1, 0.1);
       redFrequencySlider.parent(redFreqGroup);
-      redFrequencySlider.style('width', '80px');
       redFrequencyValue = createSpan('1');
       redFrequencyValue.parent(redFreqGroup);
       redFrequencySlider.input(() => {
@@ -561,9 +577,8 @@
         redWave.frequency = val;
       });
       
-      // Νέος toggle για "Αρχική φάση" για το Κόκκινο κύμα
-      let redPhaseGroup = createDiv();
-      redPhaseGroup.addClass('toggle-group');
+      // Toggle για "Αρχική φάση" για το Κόκκινο κύμα
+      let redPhaseGroup = createDiv().addClass('toggle-group');
       redPhaseGroup.parent(redDiv);
       let redPhaseToggle = createCheckbox("", false);
       let redPhaseLabel = createSpan("Αρχική φάση: 0°");
@@ -575,9 +590,8 @@
       redPhaseToggle.parent(redPhaseGroup);
       redPhaseLabel.parent(redPhaseGroup);
       
-      // Νέος toggle για "Διάδοση προς τα" για το Κόκκινο κύμα
-      let redDirGroup = createDiv();
-      redDirGroup.addClass('toggle-group');
+      // Toggle για "Διάδοση προς τα" για το Κόκκινο κύμα
+      let redDirGroup = createDiv().addClass('toggle-group');
       redDirGroup.parent(redDiv);
       let redDirectionToggle = createCheckbox("", false);
       let redDirectionLabel = createSpan("Διάδοση προς τα: Δεξιά");
