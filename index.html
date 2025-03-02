@@ -17,9 +17,11 @@
       align-items: center;
       padding: 10px;
     }
+    /* Το container που περιέχει τον simulation καμβά και το overlay options */
     #top-container {
-      display: flex;
-      gap: 15px;
+      position: relative;
+      width: 800px;
+      height: 400px;
       margin-bottom: 10px;
     }
     #simulation-container {
@@ -28,9 +30,9 @@
       border: 1px solid #ccc;
       border-radius: 8px;
       background: white;
-      position: relative;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
+    /* Overlay στο simulation, δεξιά */
     #options-container {
       width: 320px;
       height: 400px;
@@ -58,7 +60,7 @@
   </style>
 </head>
 <body>
-  <div id="top-container" style="position:relative; width:800px; height:400px;">
+  <div id="top-container">
     <div id="simulation-container"></div>
     <div id="options-container"></div>
   </div>
@@ -66,10 +68,10 @@
 
   <script>
     /* --- Global Ρυθμίσεις --- */
-    // Παράμετροι για κάθε κύμα
+    // Παράμετροι για τα κύματα
     window.blueParams = { amplitude: 20, frequency: 1, phase: 0, direction: 'left' };
     window.redParams  = { amplitude: 20, frequency: 1, phase: 0, direction: 'left' };
-    // Ορατότητα για το κάθε κύμα (μέσω επιλογών)
+    // Ορατότητα για κάθε κύμα (μέσω επιλογών)
     window.blueVisible = true;
     window.redVisible = true;
     // Έλεγχος προσομοίωσης
@@ -89,7 +91,7 @@
     } else {
       window.greenBase = { x: 200, y: 200 };
     }
-    // Καθυστέρηση έναρξης κάθε void (σε δευτερόλεπτα) ανάλογα με τη θέση του (π.χ. (centerX - 50) / 200)
+    // Καθυστέρηση έναρξης κάθε void ανάλογα με τη θέση (σε δευτερόλεπτα)
     const delayFactor = 200;
 
     /* ------------------------------ */
@@ -100,7 +102,7 @@
       let handLeft, handRight;
       
       p.preload = function() {
-        // Φόρτωση εικόνων "χεριών" με fallback
+        // Φόρτωση εικόνων "χεριών" – fallback αν δεν υπάρχουν
         handLeft = p.loadImage('handleft.png', undefined, function() {
           let g = p.createGraphics(32,32);
           g.fill(0,100,200);
@@ -120,9 +122,8 @@
         canvas.parent('simulation-container');
         p.noStroke();
         p.imageMode(p.CENTER);
-        // Δημιουργία κυμάτων
-        // Για το blueWave, το baseline (waveBase) είναι 100 (σε transverse mode, αυτό είναι το centerY)
-        // Για το redWave, το baseline είναι 300.
+        // Δημιουργία κυμάτων:
+        // Για transverse mode, το baseline (waveBase) είναι το y (π.χ. 100 για μπλε, 300 για κόκκινο)
         blueWave = new WaveSystem(p, p.color(0,100,200), 100, 'blue');
         redWave  = new WaveSystem(p, p.color(200,0,0), 300, 'red');
         blueWave.initVoids();
@@ -132,8 +133,8 @@
       
       p.draw = function() {
         p.background(245);
-        // Σχεδίαση του baseline για το πράσινο μέσο
         p.stroke(200);
+        // Σχεδίαση baseline για το πράσινο μέσο
         if(!window.isLongitudinal){
           p.line(50, 200, p.width-50, 200);
         } else {
@@ -141,7 +142,6 @@
         }
         p.noStroke();
         
-        // Ενημέρωση χρόνου προσομοίωσης με διαφορά χρόνου
         let now = p.millis();
         if(window.isPlaying){
           let dt = (now - window.lastUpdate) / 1000 * window.simSpeed;
@@ -149,7 +149,7 @@
         }
         window.lastUpdate = now;
         
-        // Ενημέρωση και σχεδίαση των κυμάτων (εμφανίζονται μόνο αν τα αντίστοιχα checkboxes το ορίζουν)
+        // Ενημέρωση και σχεδίαση των κυμάτων (εμφανίζονται αν τα αντίστοιχα checkboxes το επιτρέπουν)
         blueWave.update(window.simTime);
         redWave.update(window.simTime);
         if(window.blueVisible){ blueWave.draw(); }
@@ -158,7 +158,7 @@
         // Σχεδίαση του πράσινου κυμάτος ως υπέρθεση:
         p.fill(0,200,0,100);
         if(!window.isLongitudinal) {
-          // Transverse mode: μετατόπιση εφαρμόζεται στον y.
+          // Transverse: κάθε void απεικονίζεται ως κύκλος, με τη μετατόπιση να εφαρμόζεται στον y
           for(let i = 0; i < blueWave.voids.length; i++){
             let blueDisp = blueWave.voids[i].current - blueWave.voids[i].base;
             let redDisp = redWave.voids[i].current - redWave.voids[i].base;
@@ -166,7 +166,7 @@
             p.ellipse(blueWave.voids[i].centerX, finalY, blueWave.voidDiameter);
           }
         } else {
-          // Longitudinal mode: μετατόπιση εφαρμόζεται στον x. Κάθε void απεικονίζεται ως κατακόρυφη μπάρα (60px ύψος) με κέντρο στο void.
+          // Longitudinal: κάθε void απεικονίζεται ως κατακόρυφη μπάρα (60px ύψους) με το κέντρο στο void, μετατόπιση στον x.
           for(let i = 0; i < blueWave.voids.length; i++){
             let blueDisp = blueWave.voids[i].current - blueWave.voids[i].base;
             let redDisp = redWave.voids[i].current - redWave.voids[i].base;
@@ -177,21 +177,19 @@
         }
       };
       
-      // Κλάση WaveSystem – χρησιμοποιεί "voids" αντί για "balls".
+      // Κλάση WaveSystem – χρησιμοποιεί "voids" για τα σημεία του μέσου.
       function WaveSystem(p, col, waveBase, waveKey) {
         this.p = p;
         this.col = col;
-        // waveBase: σε transverse mode, είναι το centerY όπου θα ξεκινήσει η ταλάντωση.
-        // Σε longitudinal mode, αυτό χρησιμοποιείται ως σταθερό y για σχεδίαση της μπάρας.
         this.waveBase = waveBase;
         this.waveKey = waveKey;
-        this.voids = [];  // Κάθε void: { centerX, base, startTime, current }
+        this.voids = [];  // Κάθε void: { centerX, base, current, startTime }
         this.voidDiameter = 4;
         this.gap = 2;
         // "Χέρι" (πηγή του κύματος)
         this.hand = { img: null, pos: { x: 50, y: waveBase } };
         
-        // Ενημέρωση τοποθέτησης του "χεριού" βάσει της κατεύθυνσης διάδοσης
+        // Τοποθέτηση του "χεριού" ανάλογα με την κατεύθυνση διάδοσης
         this.updateHand = function() {
           let params = (this.waveKey === 'blue') ? window.blueParams : window.redParams;
           if(params.direction === 'left'){
@@ -208,10 +206,10 @@
           this.voids = [];
           for(let x = 50; x < p.width - 50; x += (this.voidDiameter + this.gap)){
             if(!window.isLongitudinal){
-              // Transverse: base είναι το waveBase (οριζόντια θέση y)
+              // Transverse mode: base είναι το waveBase (σταθερό y)
               this.voids.push({ centerX: x, base: this.waveBase, current: this.waveBase, startTime: (x - 50)/delayFactor });
             } else {
-              // Longitudinal: base είναι το αρχικό x (για εφαρμογή μετατόπισης στον x)
+              // Longitudinal mode: base είναι το αρχικό x (για μετατόπιση στον x)
               this.voids.push({ centerX: x, base: x, current: x, startTime: (x - 50)/delayFactor });
             }
           }
@@ -227,13 +225,12 @@
           for(let i = 0; i < this.voids.length; i++){
             if(t >= this.voids[i].startTime) {
               let dt = t - this.voids[i].startTime;
-              let displacement = amplitude * p.sin(phase + TWO_PI * frequency * dt);
+              let displacement = amplitude * p.sin(phase + p.TWO_PI * frequency * dt);
               this.voids[i].current = this.voids[i].base + displacement;
             } else {
               this.voids[i].current = this.voids[i].base;
             }
           }
-          // Ενημέρωση θέσης του "χεριού": χρησιμοποιούμε το πρώτο void.
           if(this.voids.length > 0) {
             if(!window.isLongitudinal){
               this.hand.pos.y = this.voids[0].current;
@@ -248,18 +245,15 @@
           let r = p.red(this.col), g = p.green(this.col), b = p.blue(this.col);
           p.fill(r, g, b, 100);
           if(!window.isLongitudinal){
-            // Transverse: σχεδιάζουμε κάθε void ως μικρό κύκλο στη θέση (centerX, current)
             for(let i = 0; i < this.voids.length; i++){
               p.ellipse(this.voids[i].centerX, this.voids[i].current, this.voidDiameter);
             }
           } else {
-            // Longitudinal: σχεδιάζουμε κάθε void ως κατακόρυφη μπάρα (ύψους 60px) με κέντρο στο (current, waveBase)
             p.rectMode(p.CENTER);
             for(let i = 0; i < this.voids.length; i++){
               p.rect(this.voids[i].current, this.waveBase, this.voidDiameter, 60);
             }
           }
-          // Σχεδιάζουμε το "χέρι"
           if(this.hand.img){
             if(!window.isLongitudinal){
               p.image(this.hand.img, this.hand.pos.x, this.hand.pos.y, 32, 32);
@@ -348,7 +342,6 @@
         let canvas = p.createCanvas(800,120);
         canvas.parent('controls-container');
         p.textSize(16);
-        // Play/Pause κουμπί
         let playBtn = p.createButton('▶ Start');
         playBtn.parent('controls-container');
         playBtn.position(20,20);
@@ -356,23 +349,19 @@
           window.isPlaying = !window.isPlaying;
           playBtn.html(window.isPlaying ? '⏸ Pause' : '▶ Start');
         });
-        // Reset κουμπί
         let resetBtn = p.createButton('↻ Reset');
         resetBtn.parent('controls-container');
         resetBtn.position(120,20);
         resetBtn.mousePressed(function() { window.simTime = 0; });
-        // Checkbox για εμφάνιση του πράσινου κυμάτος
         let greenChk = p.createCheckbox('Εμφάνιση Πράσινου', window.greenVisible);
         greenChk.parent('controls-container');
         greenChk.position(220,20);
         greenChk.changed(function() { window.greenVisible = this.checked(); });
-        // Slider ταχύτητας προσομοίωσης
         p.createElement('label', 'Ταχύτητα').parent('controls-container').position(20,60);
         let speedSlider = p.createSlider(0.1,5, window.simSpeed, 0.1);
         speedSlider.parent('controls-container');
         speedSlider.position(100,60);
         speedSlider.changed(function() { window.simSpeed = parseFloat(this.value()); });
-        // Επιλογέας λειτουργίας μέσου: Transverse / Longitudinal
         let modeSelect = p.createSelect();
         modeSelect.parent('controls-container');
         modeSelect.position(300,20);
@@ -381,7 +370,6 @@
         modeSelect.changed(function() {
           window.isLongitudinal = (this.value() === 'longitudinal');
           window.simTime = 0;
-          // Επανεκκίνηση προσομοίωσης για ανανέωση απεικόνισης
           location.reload();
         });
       };
