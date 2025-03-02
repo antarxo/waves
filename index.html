@@ -5,508 +5,57 @@
   <title>Δημιουργία μηχανικών κυμάτων</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
-    body, html { margin: 0; padding: 0; overflow: hidden; }
+    body, html {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+    }
+    .btn {
+      background: #007BFF;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      font-size: 16px;
+    }
+    .btn:hover { background: #0056b3; }
+    .panel {
+      background: rgba(255,255,255,0.95);
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      align-items: center;
+      padding: 10px;
+    }
+    .slider:hover, .checkbox:hover { filter: brightness(1.2); }
   </style>
 </head>
 <body>
   <script>
-    // Global μεταβλητές προσομοίωσης και ελέγχου
-    let blueWave, redWave;
-    let isPlaying = false;
-    let simTime = 0;
-    let lastUpdate = 0;
-    let speed = 100;
-    const greenBaseY = 200;
-    let greenVisible = true;
-    
-    // Εικόνες χεριών
-    let handImgLeft, handImgRight;
-    
-    // Containers διάταξης
-    let mainContainer, leftPanel, rightPanel;
-    let globalControls;
-    
-    // Global controls (δημιουργούνται μέσω p5.js)
-    let playBtn, resetBtn, waveTypeSelect, speedSlider, speedValue;
-    let greenContributionCheckbox; // Checkbox "Συμβολή:"
-    
-    // Ελέγχοι για το Μπλε κύμα
-    let blueVisibilityCheckbox, blueAmplitudeSlider, blueAmplitudeValue;
-    let blueFrequencySlider, blueFrequencyValue, bluePhaseSelect, blueDirectionSelect;
-    
-    // Ελέγχοι για το Κόκκινο κύμα
-    let redVisibilityCheckbox, redAmplitudeSlider, redAmplitudeValue;
-    let redFrequencySlider, redFrequencyValue, redPhaseSelect, redDirectionSelect;
-    
-    // Κατάσταση εμφάνισης δεξιού panel
-    let rightPanelVisible = true;
-    
-    // Βοηθητικές συναρτήσεις για εύρεση του πρώτου/τελευταίου κινούμενου σημείου σε έναν πίνακα balls
-    function getFirstMovingBallFor(balls) {
-      for (let i = 0; i < balls.length; i++) {
-        if (simTime >= balls[i].startTime) return balls[i];
-      }
-      return null;
-    }
-    function getLastMovingBallFor(balls) {
-      for (let i = balls.length - 1; i >= 0; i--) {
-        if (simTime >= balls[i].startTime) return balls[i];
-      }
-      return null;
-    }
-    
-    // Ορισμός της κλάσης WaveSystem
-    class WaveSystem {
-      constructor(color, baseY, waveKey) {
-        this.waveKey = waveKey;
-        this.color = color;
-        this.baseY = baseY;
-        this.amplitude = 20;
-        this.frequency = 1;
-        this.phase = 0;
-        // Default: "Δεξιά" με τιμή "left" σημαίνει ότι το κύμα ξεκινά από το αριστερό άκρο και προοδεύει προς τα δεξιά.
-        this.direction = "left"; 
-        this.ballSize = 2;
-        this.gap = 1;
-        this.balls = [];
-        
-        // Ανάθεση επιλογέων για "Αρχική φάση :" και "Διάδοση προς τα :"
-        if (this.waveKey === 'blue') {
-          this.selectPhase = bluePhaseSelect;
-          this.selectDirection = blueDirectionSelect;
-        } else {
-          this.selectPhase = redPhaseSelect;
-          this.selectDirection = redDirectionSelect;
-        }
-        this.selectPhase.changed(() => this.phase = parseInt(this.selectPhase.value()));
-        this.selectDirection.changed(() => this.updateDirection());
-        
-        // Αρχική θέση του χεριού (θα ενημερωθεί στη σχεδίαση)
-        this.hand = {
-          x: (this.direction === "left" ? 50 : width - 50),
-          y: this.baseY,
-          img: (this.direction === "left" ? handImgLeft : handImgRight)
-        };
-      }
-      
-      updateDirection() {
-        this.direction = this.selectDirection.value();
-        this.updateStartTimes(speed);
-      }
-      
-      initBalls() {
-        this.balls = [];
-        for (let x = 50; x < width - 50; x += (this.ballSize + this.gap)) {
-          this.balls.push({ 
-            x: x, 
-            baseY: this.baseY, 
-            startTime: Infinity, 
-            currentY: this.baseY,
-            currentX: x 
-          });
-        }
-        this.updateStartTimes(speed);
-      }
-      
-      updateStartTimes(speed) {
-        // Αν η διάδοση είναι "left", ξεκινάμε από το αριστερό άκρο (50); αλλιώς (right) από το δεξί (width-50)
-        const startPos = this.direction === 'left' ? 50 : width - 50;
-        for (const ball of this.balls) {
-          ball.startTime = speed > 0 ? abs(ball.x - startPos) / speed : Infinity;
-        }
-      }
-      
-      updatePositions(simTime) {
-        const mode = waveTypeSelect.value();
-        for (const ball of this.balls) {
-          if (simTime >= ball.startTime) {
-            const t = simTime - ball.startTime;
-            const phi = radians(this.phase) + TWO_PI * this.frequency * t;
-            if (mode === 'transverse') {
-              ball.currentY = ball.baseY + this.amplitude * sin(phi);
-            } else { // longitudinal: κίνηση οριζόντια
-              ball.currentX = ball.x + this.amplitude * sin(phi);
-            }
-          } else {
-            ball.currentY = ball.baseY;
-            ball.currentX = ball.x;
-          }
-        }
-      }
-      
-      // Σχεδίαση του κύματος:
-      // Σε transverse mode σχεδιάζονται ως ελλείψεις με πλάτος = ballSize * 2.
-      // Σε longitudinal mode σχεδιάζονται ορθογώνια με πλάτος = ballSize (ακριβώς) και ύψος = 60px.
-      drawWave() {
-        const mode = waveTypeSelect.value();
-        fill(this.color);
-        const scaleFactor = 2; // για transverse
-        if (mode === 'transverse') {
-          for (const ball of this.balls) {
-            ellipse(ball.x, ball.currentY, this.ballSize * scaleFactor, this.ballSize * scaleFactor);
-          }
-        } else {
-          rectMode(CENTER);
-          for (const ball of this.balls) {
-            rect(ball.currentX, ball.baseY, this.ballSize, 60);
-          }
-        }
-      }
-      
-      // Σχεδίαση του χεριού σύμφωνα με τις ρυθμίσεις:
-      // Στο transverse mode:
-      //   - Αν this.direction === "left": χρησιμοποιούμε getFirstMovingBallFor(this.balls) και ορίζουμε: hand.x = ball.x - 16, hand.y = ball.currentY, hand.img = handImgLeft.
-      // Στο longitudinal mode:
-      //   - Αν this.direction === "left": χρησιμοποιούμε getFirstMovingBallFor(this.balls) και ορίζουμε: hand.x = ball.currentX - 16, hand.y = ball.baseY, hand.img = handImgLeft.
-      // Αν this.direction === "right", αντίστοιχα χρησιμοποιούμε getLastMovingBallFor(this.balls) και θέτουμε offset +16.
-      drawHand() {
-        const mode = waveTypeSelect.value();
-        let ball = null;
-        if (mode === 'transverse') {
-          if (this.direction === "left") {
-            ball = getFirstMovingBallFor(this.balls);
-            if (ball) {
-              this.hand.x = ball.x - 16;
-              this.hand.y = ball.currentY;
-              this.hand.img = handImgLeft;
-            }
-          } else { // "right"
-            ball = getLastMovingBallFor(this.balls);
-            if (ball) {
-              this.hand.x = ball.x + 16;
-              this.hand.y = ball.currentY;
-              this.hand.img = handImgRight;
-            }
-          }
-        } else { // longitudinal
-          if (this.direction === "left") {
-            ball = getFirstMovingBallFor(this.balls);
-            if (ball) {
-              this.hand.x = ball.currentX - 16;
-              this.hand.y = ball.baseY;
-              this.hand.img = handImgLeft;
-            }
-          } else { // "right"
-            ball = getLastMovingBallFor(this.balls);
-            if (ball) {
-              this.hand.x = ball.currentX + 16;
-              this.hand.y = ball.baseY;
-              this.hand.img = handImgRight;
-            }
-          }
-        }
-        if (!this.hand.img) return;
-        imageMode(CENTER);
-        image(this.hand.img, this.hand.x, this.hand.y, 32, 32);
-      }
-    }
-    
-    function preload(){
-      handImgLeft = loadImage('handleft.png');
-      handImgRight = loadImage('handright.png');
-    }
-    
+    let blueWave, redWave, isPlaying = false, simTime = 0, lastUpdate = 0, speed = 100;
     function setup() {
-      // Δημιουργία container με διάταξη δύο στηλών
-      mainContainer = createDiv();
-      mainContainer.style('display', 'flex');
-      mainContainer.style('flex-direction', 'row');
-      mainContainer.style('width', '100%');
-      mainContainer.style('height', '100vh');
-      
-      // Αριστερή στήλη: Καμβάς + Global controls (κάτω)
-      leftPanel = createDiv();
-      leftPanel.style('flex', '1');
-      leftPanel.style('display', 'flex');
-      leftPanel.style('flex-direction', 'column');
-      leftPanel.style('align-items', 'center');
-      leftPanel.style('justify-content', 'center');
-      leftPanel.parent(mainContainer);
-      
-      // Δημιουργία καμβά με πλάτος 1200 για περισσότερα σημεία
-      let canvas = createCanvas(1200, 400);
-      canvas.parent(leftPanel);
-      
-      // Global controls κάτω από το καμβά
-      globalControls = createDiv();
-      globalControls.style('margin-top', '10px');
-      globalControls.style('width', '1200px');
-      globalControls.style('background', 'rgba(255,255,255,0.9)');
-      globalControls.style('padding', '10px');
-      globalControls.style('display', 'flex');
-      globalControls.style('justify-content', 'space-around');
-      globalControls.style('border', '1px solid #ddd');
-      globalControls.style('border-radius', '5px');
-      globalControls.parent(leftPanel);
-      
-      // Global controls: Play/Pause, Reset, Επιλογή τύπου κύματος
-      playBtn = createButton('▶');
-      playBtn.parent(globalControls);
-      playBtn.mousePressed(() => {
+      createCanvas(1200, 400).parent(document.body);
+      let controlsDiv = createDiv().addClass('controls').parent(document.body);
+      createButton('▶').addClass('btn').parent(controlsDiv).mousePressed(() => {
         isPlaying = !isPlaying;
-        playBtn.html(isPlaying ? '⏸' : '▶');
-        lastUpdate = millis();
       });
-      
-      resetBtn = createButton('↻');
-      resetBtn.parent(globalControls);
-      resetBtn.mousePressed(() => {
+      createButton('↻').addClass('btn').parent(controlsDiv).mousePressed(() => {
         simTime = 0;
-        isPlaying = false;
-        blueWave.initBalls();
-        redWave.initBalls();
       });
-      
-      waveTypeSelect = createSelect();
-      waveTypeSelect.option('Εγκάρσιο', 'transverse');
-      waveTypeSelect.option('Διάμηκες', 'longitudinal');
-      waveTypeSelect.parent(globalControls);
-      
-      // Checkbox για "Συμβολή:" (για πράσινη απεικόνιση)
-      greenContributionCheckbox = createCheckbox("Συμβολή:", true);
-      greenContributionCheckbox.parent(globalControls);
-      
-      // Ετικέτα και slider για "Ταχύτητα κύματος :" (εύρος 0-100)
-      let speedLabel = createSpan("Ταχύτητα κύματος :");
-      speedLabel.parent(globalControls);
-      speedSlider = createSlider(0, 100, 100, 1);
-      speedSlider.parent(globalControls);
-      speedSlider.input(() => {
-        speed = speedSlider.value();
-        speedValue.html(speed);
-        blueWave.updateStartTimes(speed);
-        redWave.updateStartTimes(speed);
-      });
-      speedValue = createSpan('100');
-      speedValue.parent(globalControls);
-      
-      // Δεξιά στήλη: Controls Panel για τα κύματα
-      rightPanel = createDiv();
-      rightPanel.style('width', '300px');
-      rightPanel.style('padding', '10px');
-      rightPanel.style('background', 'rgba(255,255,255,0.9)');
-      rightPanel.style('overflow-y', 'auto');
-      rightPanel.style('border', '1px solid #ddd');
-      rightPanel.style('border-radius', '5px');
-      rightPanel.parent(mainContainer);
-      
-      // Ελέγχοι για το Μπλε κύμα
-      let blueDiv = createDiv();
-      blueDiv.parent(rightPanel);
-      blueDiv.style('margin-bottom', '15px');
-      blueDiv.style('padding-bottom', '15px');
-      blueDiv.style('border-bottom', '1px solid #eee');
-      
-      let blueTitle = createElement('h3', 'Μπλε Κύμα');
-      blueTitle.style('color', '#0066cc');
-      blueTitle.parent(blueDiv);
-      
-      blueVisibilityCheckbox = createCheckbox('Εμφάνιση', true);
-      blueVisibilityCheckbox.parent(blueDiv);
-      
-      let blueAmpGroup = createDiv();
-      blueAmpGroup.parent(blueDiv);
-      let blueAmpLabel = createElement('label', 'Πλάτος :');
-      blueAmpLabel.parent(blueAmpGroup);
-      blueAmplitudeSlider = createSlider(0, 40, 20, 1);
-      blueAmplitudeSlider.parent(blueAmpGroup);
-      blueAmplitudeValue = createSpan('20');
-      blueAmplitudeValue.parent(blueAmpGroup);
-      blueAmplitudeSlider.input(() => {
-        let val = blueAmplitudeSlider.value();
-        blueAmplitudeValue.html(val);
-        blueWave.amplitude = val;
-      });
-      
-      let blueFreqGroup = createDiv();
-      blueFreqGroup.parent(blueDiv);
-      let blueFreqLabel = createElement('label', 'Συχνότητα :');
-      blueFreqLabel.parent(blueFreqGroup);
-      blueFrequencySlider = createSlider(0, 2.5, 1, 0.1);
-      blueFrequencySlider.parent(blueFreqGroup);
-      blueFrequencyValue = createSpan('1');
-      blueFrequencyValue.parent(blueFreqGroup);
-      blueFrequencySlider.input(() => {
-        let val = blueFrequencySlider.value();
-        blueFrequencyValue.html(val);
-        blueWave.frequency = val;
-      });
-      
-      let bluePhaseGroup = createDiv();
-      bluePhaseGroup.parent(blueDiv);
-      let bluePhaseLabel = createElement('label', 'Αρχική φάση :');
-      bluePhaseLabel.parent(bluePhaseGroup);
-      bluePhaseSelect = createSelect();
-      bluePhaseSelect.option('0°', '0');
-      bluePhaseSelect.option('180°', '180');
-      bluePhaseSelect.parent(bluePhaseGroup);
-      
-      let blueDirGroup = createDiv();
-      blueDirGroup.parent(blueDiv);
-      let blueDirLabel = createElement('label', 'Διάδοση προς τα :');
-      blueDirLabel.parent(blueDirGroup);
-      blueDirectionSelect = createSelect();
-      // Default για το μπλε: "Δεξιά" με τιμή "left"
-      blueDirectionSelect.option('Δεξιά', 'left');
-      blueDirectionSelect.option('Αριστερά', 'right');
-      blueDirectionSelect.parent(blueDirGroup);
-      
-      // Ελέγχοι για το Κόκκινο κύμα
-      let redDiv = createDiv();
-      redDiv.parent(rightPanel);
-      redDiv.style('margin-bottom', '15px');
-      redDiv.style('padding-bottom', '15px');
-      redDiv.style('border-bottom', '1px solid #eee');
-      
-      let redTitle = createElement('h3', 'Κόκκινο Κύμα');
-      redTitle.style('color', '#cc0000');
-      redTitle.parent(redDiv);
-      
-      redVisibilityCheckbox = createCheckbox('Εμφάνιση', true);
-      redVisibilityCheckbox.parent(redDiv);
-      
-      let redAmpGroup = createDiv();
-      redAmpGroup.parent(redDiv);
-      let redAmpLabel = createElement('label', 'Πλάτος :');
-      redAmpLabel.parent(redAmpGroup);
-      redAmplitudeSlider = createSlider(0, 40, 20, 1);
-      redAmplitudeSlider.parent(redAmpGroup);
-      redAmplitudeValue = createSpan('20');
-      redAmplitudeValue.parent(redAmpGroup);
-      redAmplitudeSlider.input(() => {
-        let val = redAmplitudeSlider.value();
-        redAmplitudeValue.html(val);
-        redWave.amplitude = val;
-      });
-      
-      let redFreqGroup = createDiv();
-      redFreqGroup.parent(redDiv);
-      let redFreqLabel = createElement('label', 'Συχνότητα :');
-      redFreqLabel.parent(redFreqGroup);
-      redFrequencySlider = createSlider(0, 2.5, 1, 0.1);
-      redFrequencySlider.parent(redFreqGroup);
-      redFrequencyValue = createSpan('1');
-      redFrequencyValue.parent(redFreqGroup);
-      redFrequencySlider.input(() => {
-        let val = redFrequencySlider.value();
-        redFrequencyValue.html(val);
-        redWave.frequency = val;
-      });
-      
-      let redPhaseGroup = createDiv();
-      redPhaseGroup.parent(redDiv);
-      let redPhaseLabel = createElement('label', 'Αρχική φάση :');
-      redPhaseLabel.parent(redPhaseGroup);
-      redPhaseSelect = createSelect();
-      redPhaseSelect.option('0°', '0');
-      redPhaseSelect.option('180°', '180');
-      redPhaseSelect.parent(redPhaseGroup);
-      
-      let redDirGroup = createDiv();
-      redDirGroup.parent(redDiv);
-      let redDirLabel = createElement('label', 'Διάδοση προς τα :');
-      redDirLabel.parent(redDirGroup);
-      redDirectionSelect = createSelect();
-      // Για το κόκκινο κύμα, ορίζουμε default "Δεξιά" με τιμή "left" ώστε να ξεκινά από το αριστερότερο σημείο
-      redDirectionSelect.option('Δεξιά', 'left');
-      redDirectionSelect.option('Αριστερά', 'right');
-      redDirectionSelect.parent(redDirGroup);
-      
-      // Αρχικοποίηση των συστημάτων κυμάτων (μετά το createCanvas ώστε το width να είναι ορισμένο)
-      blueWave = new WaveSystem(color(0, 100, 200), 100, 'blue');
-      redWave = new WaveSystem(color(200, 0, 0), 300, 'red');
-      blueWave.initBalls();
-      redWave.initBalls();
     }
-    
     function draw() {
       background(245);
-      
-      // Βοηθητικές γραμμές αναφοράς
-      stroke(200);
-      drawingContext.setLineDash([5, 5]);
-      line(50, blueWave.baseY, width - 50, blueWave.baseY);
-      line(50, redWave.baseY, width - 50, redWave.baseY);
-      line(50, greenBaseY, width - 50, greenBaseY);
-      drawingContext.setLineDash([]);
-      
-      if (isPlaying) {
-        let now = millis();
-        simTime += (now - lastUpdate) / 1000;
-        lastUpdate = now;
-      }
-      
-      blueWave.updatePositions(simTime);
-      redWave.updatePositions(simTime);
-      
-      // Σχεδίαση κυμάτων (Μπλε και Κόκκινο) με scaleFactor 2 για transverse,
-      // και χωρίς scaleFactor για longitudinal (δηλαδή, πλάτος = ballSize, ύψος = 60)
-      if (blueVisibilityCheckbox.checked()) blueWave.drawWave();
-      if (redVisibilityCheckbox.checked()) redWave.drawWave();
-      
-      // Σχεδίαση πράσινης υπέρθεσης: greenDiameter = (ballSize_μπλε * 2)
-      if (greenContributionCheckbox.checked()) {
-        const mode = waveTypeSelect.value();
-        noStroke();
-        fill(0, 200, 0);
-        let greenDiameter = blueWave.ballSize * 2;
-        for (let i = 0; i < blueWave.balls.length; i++) {
-          let combinedPos;
-          if (mode === 'transverse') {
-            const yB = blueVisibilityCheckbox.checked() ? blueWave.balls[i].currentY : blueWave.baseY;
-            const yR = redVisibilityCheckbox.checked() ? redWave.balls[i].currentY : redWave.baseY;
-            combinedPos = (yB + yR) / 2;
-            ellipse(blueWave.balls[i].x, combinedPos, greenDiameter, greenDiameter);
-          } else {
-            const xB = blueVisibilityCheckbox.checked() ? blueWave.balls[i].currentX : blueWave.balls[i].x;
-            const xR = redVisibilityCheckbox.checked() ? redWave.balls[i].currentX : redWave.balls[i].x;
-            combinedPos = (xB + xR) / 2;
-            rectMode(CENTER);
-            rect(combinedPos, greenBaseY, greenDiameter, 60);
-          }
-        }
-      }
-      
-      // Σχεδίαση των χεριών για κάθε κύμα, σύμφωνα με τις ρυθμίσεις και τον mode
-      blueWave.drawHand();
-      redWave.drawHand();
-      
-      // Σχεδίαση overlay toggle κουμπιού στο πάνω δεξί μέρος του καμβά
-      drawToggleButton();
-    }
-    
-    // Σχεδίαση του overlay toggle κουμπιού με p5.js
-    function drawToggleButton() {
-      let btnX = width - 150;
-      let btnY = 10;
-      let btnW = 140;
-      let btnH = 30;
-      fill(200);
-      stroke(100);
-      rect(btnX, btnY, btnW, btnH, 5);
-      fill(0);
-      noStroke();
-      textAlign(CENTER, CENTER);
-      textSize(12);
-      let btnText = rightPanelVisible ? "Απόκρυψη Χειριστηρίων" : "Εμφάνιση Χειριστηρίων";
-      text(btnText, btnX + btnW / 2, btnY + btnH / 2);
-    }
-    
-    // Εναλλαγή εμφάνισης του δεξιού panel όταν γίνεται κλικ στο toggle κουμπί
-    function mousePressed() {
-      let btnX = width - 150;
-      let btnY = 10;
-      let btnW = 140;
-      let btnH = 30;
-      if (mouseX >= btnX && mouseX <= btnX + btnW &&
-          mouseY >= btnY && mouseY <= btnY + btnH) {
-        rightPanelVisible = !rightPanelVisible;
-        if (rightPanelVisible) {
-          rightPanel.show();
-        } else {
-          rightPanel.hide();
-        }
-      }
+      if (isPlaying) simTime += (millis() - lastUpdate) / 1000;
+      lastUpdate = millis();
     }
   </script>
 </body>
