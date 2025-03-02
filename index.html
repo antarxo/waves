@@ -32,7 +32,7 @@
       background: white;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
-    /* Overlay options – εμφανίζονται δεξιά του simulation */
+    /* Overlay options που εμφανίζονται δεξιά του simulation */
     #options-container {
       width: 320px;
       height: 400px;
@@ -68,10 +68,10 @@
 
   <script>
     /* --- Global Ρυθμίσεις --- */
-    // Παράμετροι για κάθε κύμα
+    // Παράμετροι για τα κύματα
     window.blueParams = { amplitude: 20, frequency: 1, phase: 0, direction: 'left' };
     window.redParams  = { amplitude: 20, frequency: 1, phase: 0, direction: 'left' };
-    // Ορατότητα για τα μεμονωμένα κύματα (μέσω επιλογών)
+    // Ορατότητα για κάθε κύμα (μέσω επιλογών)
     window.blueVisible = true;
     window.redVisible = true;
     // Έλεγχος προσομοίωσης
@@ -85,7 +85,7 @@
     window.isLongitudinal = false;
     // Baseline για το πράσινο:
     // Transverse: y = 200.
-    // Longitudinal: χρησιμοποιούμε x = 200 και σταθερό y = 200.
+    // Longitudinal: x = 200, y = 200.
     if(!window.isLongitudinal){
       window.greenBase = { y: 200 };
     } else {
@@ -102,7 +102,7 @@
       let handLeft, handRight;
       
       p.preload = function() {
-        // Φόρτωση εικόνων "χεριών" – fallback αν δεν υπάρχουν
+        // Φόρτωση εικόνων "χεριών" – fallback γραφικά αν δεν βρεθούν.
         handLeft = p.loadImage('handleft.png', undefined, function() {
           let g = p.createGraphics(32,32);
           g.fill(0,100,200);
@@ -122,9 +122,9 @@
         canvas.parent('simulation-container');
         p.noStroke();
         p.imageMode(p.CENTER);
-        // Δημιουργία κυμάτων.
-        // Στο Transverse mode, το baseline (waveBase) είναι το y (π.χ. 100 για το μπλε, 300 για το κόκκινο).
-        // Στο Longitudinal mode, τα voids έχουν base ίσο με το αρχικό x και το y παραμένει σταθερό (π.χ. 100 ή 300).
+        // Δημιουργία των δύο κυμάτων.
+        // Στο Transverse mode, το waveBase είναι το y (π.χ. 100 για μπλε, 300 για κόκκινο).
+        // Στο Longitudinal mode, κάθε void έχει ως base το αρχικό x (και το y παραμένει σταθερό στο waveBase).
         blueWave = new WaveSystem(p, p.color(0,100,200), 100, 'blue');
         redWave  = new WaveSystem(p, p.color(200,0,0), 300, 'red');
         blueWave.initVoids();
@@ -135,7 +135,7 @@
       p.draw = function() {
         p.background(245);
         p.stroke(200);
-        // Σχεδίαση baseline για το πράσινο μέσο
+        // Σχεδίαση baseline του πράσινου μέσου.
         if(!window.isLongitudinal){
           p.line(50, 200, p.width-50, 200);
         } else {
@@ -150,16 +150,17 @@
         }
         window.lastUpdate = now;
         
-        // Ενημέρωση και σχεδίαση των κυμάτων (εμφανίζονται μόνο αν τα αντίστοιχα checkboxes το επιτρέπουν)
+        // Ενημέρωση και σχεδίαση των κυμάτων (εμφανίζονται αν τα αντίστοιχα checkboxes το ορίζουν)
         blueWave.update(window.simTime);
         redWave.update(window.simTime);
         if(window.blueVisible){ blueWave.draw(); }
         if(window.redVisible){ redWave.draw(); }
         
-        // Σχεδίαση του πράσινου κυμάτος ως υπέρθεση:
+        // Σχεδίαση του πράσινου κυμάτος ως υπέρθεση.
+        // Η μετατόπιση υπολογίζεται ως το άθροισμα των μετατοπίσεων των voids των δύο κυμάτων.
         p.fill(0,200,0,100);
         if(!window.isLongitudinal) {
-          // Transverse mode: κάθε void απεικονίζεται ως κύκλος που ταλαντώνεται στον y.
+          // Transverse mode: voids ως κύκλοι.
           for(let i = 0; i < blueWave.voids.length; i++){
             let blueDisp = blueWave.voids[i].current - blueWave.voids[i].base;
             let redDisp = redWave.voids[i].current - redWave.voids[i].base;
@@ -167,8 +168,8 @@
             p.ellipse(blueWave.voids[i].centerX, finalY, blueWave.voidDiameter);
           }
         } else {
-          // Longitudinal mode: κάθε void αντιστοιχεί σε κατακόρυφη μπάρα ύψους 60px,
-          // με πλάτος ίσο με τη διάμετρο της έλλειψης του transverse mode και κέντρο στην αντίστοιχη θέση.
+          // Longitudinal mode: κάθε void αντιστοιχεί σε μια κατακόρυφη μπάρα.
+          // Η μετατόπιση εφαρμόζεται στον x, και η μπάρα έχει ύψος 60px.
           for(let i = 0; i < blueWave.voids.length; i++){
             let blueDisp = blueWave.voids[i].current - blueWave.voids[i].base;
             let redDisp = redWave.voids[i].current - redWave.voids[i].base;
@@ -179,7 +180,7 @@
         }
       };
       
-      // Κλάση WaveSystem – κάθε κύμα αποτελείται από "voids"
+      // Κλάση WaveSystem – κάθε κύμα αποτελείται από "voids" (σημεία του μέσου).
       function WaveSystem(p, col, waveBase, waveKey) {
         this.p = p;
         this.col = col;
@@ -193,7 +194,7 @@
         // "Χέρι" (πηγή του κύματος)
         this.hand = { img: null, pos: { x: 50, y: waveBase } };
         
-        // Τοποθέτηση του "χεριού" ανάλογα με την κατεύθυνση διάδοσης.
+        // Τοποθέτηση του "χεριού" ανάλογα με την κατεύθυνση διάδοσης
         this.updateHand = function() {
           let params = (this.waveKey === 'blue') ? window.blueParams : window.redParams;
           if(params.direction === 'left'){
@@ -210,10 +211,10 @@
           this.voids = [];
           for(let x = 50; x < p.width - 50; x += (this.voidDiameter + this.gap)){
             if(!window.isLongitudinal){
-              // Transverse: base είναι το waveBase (σταθερό y)
+              // Transverse mode: base είναι το waveBase (σταθερό y)
               this.voids.push({ centerX: x, base: this.waveBase, current: this.waveBase, startTime: (x - 50) / delayFactor });
             } else {
-              // Longitudinal: base είναι το αρχικό x, και θα ταλαντώνονται στον x
+              // Longitudinal mode: base είναι το αρχικό x (για εφαρμογή μετατόπισης στον x)
               this.voids.push({ centerX: x, base: x, current: x, startTime: (x - 50) / delayFactor });
             }
           }
@@ -245,20 +246,23 @@
           }
         };
         
-        // draw: Σχεδιάζει τα voids και το "χέρι"
+        // draw: Σχεδιάζει τα voids και το "χερι"
         this.draw = function() {
           let r = p.red(this.col), g = p.green(this.col), b = p.blue(this.col);
           p.fill(r, g, b, 100);
           if(!window.isLongitudinal){
+            // Transverse mode: σχεδιάζουμε κάθε void ως μικρό κύκλο στην θέση (centerX, current)
             for(let i = 0; i < this.voids.length; i++){
               p.ellipse(this.voids[i].centerX, this.voids[i].current, this.voidDiameter);
             }
           } else {
+            // Longitudinal mode: σχεδιάζουμε κάθε void ως κατακόρυφη μπάρα (ύψους 60px) με κέντρο (current, waveBase)
             p.rectMode(p.CENTER);
             for(let i = 0; i < this.voids.length; i++){
               p.rect(this.voids[i].current, this.waveBase, this.voidDiameter, 60);
             }
           }
+          // Σχεδιάζουμε το "χέρι"
           if(this.hand.img){
             if(!window.isLongitudinal){
               p.image(this.hand.img, this.hand.pos.x, this.hand.pos.y, 32, 32);
